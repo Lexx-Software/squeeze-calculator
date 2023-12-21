@@ -1,0 +1,15 @@
+{
+    "cSpell.words": [
+        "coeff",
+        "hpjs",
+        "Klines",
+        "optimjs",
+        "quniform"
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/*.js": {"when": "$(basename).ts"},
+        "**/*.map": true
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "squeeze",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cmd/squeeze.ts",
+  "dependencies": {
+    "optimization-js": "^1.5.0",
+    "query-string": "^6.11.1",
+    "request": "^2.88.2"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}
