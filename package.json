@@ -1,8 +1,8 @@
 {
-  "name": "squeeze",
+  "name": "squeeze-calculator",
   "version": "1.0.0",
   "description": "",
-  "main": "cmd/squeeze.ts",
+  "main": "cmd/cmdSample.ts",
   "dependencies": {
     "optimization-js": "^1.5.0",
     "query-string": "^6.11.1",
