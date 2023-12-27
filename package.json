@@ -4,9 +4,9 @@
   "description": "",
   "main": "cmd/cmdSample.ts",
   "dependencies": {
+    "bent": "^7.3.12",
     "optimization-js": "^1.5.0",
-    "query-string": "^6.11.1",
-    "request": "^2.88.2"
+    "query-string": "^6.11.1"
   },
   "scripts": {
     "build": "tsc"

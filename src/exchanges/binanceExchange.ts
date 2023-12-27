@@ -1,4 +1,4 @@
-import * as request from 'request';
+const bent = require('bent')
 const queryString = require('query-string');
 import { IKeyValueObject, IKline } from '../types';
 import { TimeFrameSeconds, removeUndefined } from '../utils';
@@ -13,62 +13,27 @@ export interface ISymbolsTicker {
 const MAX_KLINES_REQUEST_LENGTH = 1000;
 
 export class BinanceExchange {
-    private _baseUrls: string;
+    private _getRequest: any;
 
     constructor(exchange: 'binance' | 'binance-futures') {
         if (exchange == 'binance') {
-            this._baseUrls = 'https://api.binance.com/'
+            this._getRequest = bent('https://api.binance.com/', 'GET', 'json');
         } else if (exchange == 'binance-futures') {
-            this._baseUrls = 'https://fapi.binance.com/'
+            this._getRequest = bent('https://fapi.binance.com/', 'GET', 'json');
         } else {
             throw new Error(`Unknown exchange ${exchange}`)
         }
     }
 
-    private async _doSingleHttpRequest<T = any | undefined>(requestOptions: request.OptionsWithUrl): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            request(requestOptions, (error, response, data) => {
-                if (error) {
-                    console.warn('Call failed: %s (%s)', error.toString(), JSON.stringify(requestOptions));
-                    reject(error);
-                    return;
-                }
-    
-                if (!response) {
-                    resolve(response);
-                    return;
-                }
-
-                if (!data) {
-                    console.log('Empty data: %s', JSON.stringify(response.toJSON()));
-                }
-    
-                resolve(data);
-            });
-        });
-    }
-    
     async _doApiPublicRequest(path: string, params?: IKeyValueObject): Promise<any> {
-        const requestOptions: request.OptionsWithUrl = {
-            url: this._baseUrls + path,
-            method: 'GET'
-        };
-    
         if (params) {
-            requestOptions.url += '?' + queryString.stringify(removeUndefined(params));
+            path += '?' + queryString.stringify(removeUndefined(params));
         }
-
-        const result = await this._doSingleHttpRequest(requestOptions);
-
-        const d = JSON.parse(result);
-        if (d.code || d.msg) {
-            throw new Error(`Data: ${result.data} call: ${JSON.stringify(requestOptions)}`);
-        }
-        return d;
+        return await this._getRequest(path);
     }
 
     async getSymbolsInfo(): Promise<IBinanceExchangeInfo> {
-        return await this._doApiPublicRequest('api/v3/exchangeInfo');
+        return await this._doApiPublicRequest('api/v3/exchangeInfo')
     }
 
     async getSymbolsTickers(): Promise<ISymbolsTicker> {
