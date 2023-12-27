@@ -1,0 +1,30 @@
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  outline: none;
+}
+
+html {
+  text-size-adjust: none;
+  height: 100vh;
+}
+
+body {
+  font-family: "PT Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  color: $white;
+  background: $black;
+}
+
+#app {
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+  transition: all 0.3s;
+  color: $white;
+}
