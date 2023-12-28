@@ -12,7 +12,7 @@ export default {
     main: {
         dataSettings: 'Основные настройки',
         exchange: 'Биржа',
-        fee: 'Торговая комиссия',
+        fee: 'Комиссия',
         symbol: 'Символ',
         time: 'Время',
         from: 'От',

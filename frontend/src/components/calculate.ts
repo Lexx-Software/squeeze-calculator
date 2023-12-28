@@ -82,6 +82,9 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.stopLossPercent.to,
         }
     }
+    if (!formData.stopLossTime.isActive && !formData.stopLossPercent.isActive) {
+        settings.stopOnKlineClosed = false;
+    }
     if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive) {
         settings.filters = {};
         if (formData.minNumDeals.isActive) {
@@ -123,7 +126,7 @@ export async function calculateData(formData: any, cb): Promise<any> {
     return {
         symbol,
         exchange: formData.exchange,
-        stopOnKlineClosed: formData.stopOnKlineClosed,
+        stopOnKlineClosed: settings.stopOnKlineClosed,
         dataArr: finder.getAllAttemptsSqueezes(),
     };
 }

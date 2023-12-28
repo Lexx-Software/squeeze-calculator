@@ -4,6 +4,10 @@
     margin-top: 18px;
     .form {
         display: flex;
+        justify-content: space-between;
+        .main-fields {
+            margin-left: 20px;
+        }
         .additional-fields {
             padding-left: 50px;
             border-left: 0.5px solid $grey;
@@ -20,7 +24,7 @@
                 margin-bottom: 16px;
             }
             .el-input {
-                width: 220px;
+                width: 180px;
             }
             .el-checkbox {
                 margin-right: 16px;
@@ -34,7 +38,7 @@
                 }
                 .fee-item {
                     position: relative;
-                    right: 60px;
+                    right: 92px;
                 }
                 .short-input {
                     width: 100px;
@@ -53,7 +57,8 @@
         }
     }
     .btn-block {
-        margin-left: 180px;
+        margin-left: 200px;
+        margin-bottom: 16px;
         .el-button {
             width: 120px;
         }

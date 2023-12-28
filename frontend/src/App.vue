@@ -7,10 +7,10 @@
         <span class="title">{{ $t('header.title') }}</span>
       </div>
       <div class="settings-block">
-        <el-dropdown class="header__dropdown-lang" trigger="click" @command="handleCommandLang">
-          <span class="header__dropdown-btn">
+        <el-dropdown trigger="click" @command="handleCommandLang">
+          <span>
             {{ $i18n.locale.toUpperCase() }}
-            <el-icon class="header__dropdown-icon"><arrow-down /></el-icon>
+            <span class="arrow-symbol">⌄</span>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
@@ -68,6 +68,11 @@ export default class App extends Vue {
     font-size: 14px;
     margin-left: 12px;
     color: $grey;
+  }
+  .arrow-symbol {
+    position: relative;
+    bottom: 4px;
+    font-size: 12px;
   }
 }
 

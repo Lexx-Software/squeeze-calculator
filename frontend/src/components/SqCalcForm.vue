@@ -122,7 +122,11 @@
 
             <div class="block">
               <el-form-item label=" ">
-                <el-checkbox v-model="calcForm.stopOnKlineClosed" :label="$t('main.stopOnKlineClosed')" />
+                <el-checkbox
+                  v-model="calcForm.stopOnKlineClosed"
+                  :label="$t('main.stopOnKlineClosed')"
+                  :disabled="!calcForm.stopLossTime.isActive && !calcForm.stopLossPercent.isActive"
+                />
               </el-form-item>
             </div>
           </div>
@@ -141,7 +145,13 @@
               </el-form-item>
 
               <el-form-item :label="`${$t('main.minNumDeals')}:`">
-                <el-input-number v-model="calcForm.minNumDeals.value" :min="0" :disabled="!calcForm.minNumDeals.isActive" />
+                <el-input-number
+                  v-model="calcForm.minNumDeals.value"
+                  :min="0"
+                  :precision="0"
+                  :step="1"
+                  :disabled="!calcForm.minNumDeals.isActive"
+                />
               </el-form-item>
             </div>
 
@@ -151,7 +161,13 @@
               </el-form-item>
 
               <el-form-item :label="`${$t('main.minCoeff')}:`">
-                <el-input-number v-model="calcForm.minCoeff.value" :min="0" :disabled="!calcForm.minCoeff.isActive" />
+                <el-input-number
+                  v-model="calcForm.minCoeff.value"
+                  :min="0"
+                  :precision="1"
+                  :step="0.1"
+                  :disabled="!calcForm.minCoeff.isActive"
+                />
               </el-form-item>
             </div>
 
@@ -161,7 +177,14 @@
               </el-form-item>
 
               <el-form-item :label="`${$t('main.minWinRate')}:`">
-                <el-input-number v-model="calcForm.minWinRate.value" :min="0" :disabled="!calcForm.minWinRate.isActive" />
+                <el-input-number
+                  v-model="calcForm.minWinRate.value"
+                  :min="0"
+                  :max="1"
+                  :precision="2"
+                  :step="0.01"
+                  :disabled="!calcForm.minWinRate.isActive"
+                />
               </el-form-item>
             </div>
           </div>
@@ -213,7 +236,6 @@
     <div class="download-block">
       <div class="text-block">
         <span v-if="downloadText" class="item" v-html="downloadText" />
-        <br>
         <span v-if="downloadTimeText" class="item" v-html="downloadTimeText" />
       </div>
       <div class="progress-block">
@@ -232,7 +254,7 @@
     </span>
     <div v-if="tableData" class="table-block">
       <span class="title">
-        {{ $t('main.results') }}:
+        {{ $t('main.results') }} ({{ resultsCount }}):
       </span>
       <el-table class="table" :data="tableData">
         <el-table-column :label="$t('main.table.binding')">
@@ -408,16 +430,16 @@ export default class SqCalcForm extends Vue {
 
   setDownloadText(data) {
     if (data.startDownload) {
-      this.downloadText = 'Downloading';
+      this.downloadText = 'Downloading... ';
     }
-    if (data.downloadTime) {
-      this.downloadTimeText += `Download in ${data.downloadTime} seconds. `;
+    if (data.downloadTime && Number(data.downloadTime) !== 0) {
+      this.downloadTimeText += `Downloaded in ${data.downloadTime} seconds. `;
     }
     if (data.startCalculate) {
-      this.downloadText = 'Calculating';
+      this.downloadText = 'Calculating... ';
     }
     if (data.calculateTime) {
-      this.downloadTimeText += `Calculate in ${data.calculateTime} seconds. `;
+      this.downloadTimeText += `Calculated in ${data.calculateTime} seconds. `;
     }
     if (data.progress) {
       this.downloadProgress = data.progress;
@@ -429,6 +451,11 @@ export default class SqCalcForm extends Vue {
       this.downloadText = '';
       this.downloadTimeText = '';
       this.tableData = undefined;
+      this.resultsCount = 0;
+
+      if (Object.values(this.calcForm.binding).every((value) => value === false)) {
+        throw new Error(t('main.binding'))
+      }
 
       // @ts-ignore
       await this.checkFormValid(this.$refs.calcFormRef);
@@ -438,7 +465,6 @@ export default class SqCalcForm extends Vue {
       this.setTableData(result);
 
       console.log('Result:', result);
-      // console.log('Result:\n%s', JSON.stringify(result, null, 2));
     } catch (err) {
       (this as any).$message({
           type: 'error',
@@ -468,6 +494,7 @@ export default class SqCalcForm extends Vue {
 
   tableData = undefined;
   isNoTableData = false
+  resultsCount = 0;
 
   setTableData(data) {
     this.tableData = undefined
@@ -477,6 +504,7 @@ export default class SqCalcForm extends Vue {
     }
     this.tableData = [];
     for (const item of data.dataArr) {
+      this.resultsCount++
       this.tableData.push({
           binding: item.settings.binding,
           percentBuy: item.settings.percentBuy,
@@ -539,6 +567,7 @@ export default class SqCalcForm extends Vue {
     this.downloadText = '';
     this.downloadTimeText = '';
     this.tableData = undefined;
+    this.resultsCount = 0;
 
     this.calcForm = {
       exchange: EXCHANGE.BINANCE,
