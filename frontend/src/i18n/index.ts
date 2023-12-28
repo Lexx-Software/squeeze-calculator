@@ -4,7 +4,7 @@ import en from './locales/en';
 import ru from './locales/ru';
 
 export default createI18n({
-    locale: 'ru',
+    locale: 'en',
     fallbackLocale: 'en',
     messages: { en, ru },
     pluralizationRules: {

@@ -7,6 +7,7 @@ export default {
     },
     validation: {
         inputValue: 'Input value',
+        lessThanPrev: 'Less than previous'
     },
     main: {
         dataSettings: 'Data settings',
@@ -45,7 +46,7 @@ export default {
             binding: 'Binding',
             percentBuy: 'Buy %',
             percentSell: 'Sell %',
-            timeout: 'Timeout',
+            timeout: 'Timeout (min)',
             stopLossPercent: 'SL %',
             totalDeals: 'Num Deals',
             totalProfitPercent: 'Profit',

@@ -40,6 +40,7 @@ export async function calculateData(formData: any, cb): Promise<any> {
     const from = new Date(formData.time[0]).getTime()
     const to = new Date(formData.time[1]).getTime()
     const commissionPercent = formData.fee;
+    const saveResults = formData.saveResults;
     const binding = [];
     for (const key of Object.keys(formData.binding)) {
         if (formData.binding[key] === true) {
@@ -48,12 +49,12 @@ export async function calculateData(formData: any, cb): Promise<any> {
     }
     const settings: ISqueezeOptimizationsParameters = {
         percentBuy: {
-            from: formData.percentBuy.from,
-            to: formData.percentBuy.to,
+            from: formData.percentBuyFrom,
+            to: formData.percentBuyTo,
         },
         percentSell: {
-            from: formData.percentSell.from,
-            to: formData.percentSell.to,
+            from: formData.percentSellFrom,
+            to: formData.percentSellTo,
         },
         binding,
         stopOnKlineClosed: formData.stopOnKlineClosed,
@@ -100,11 +101,11 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     cb({ startCalculate: true })
 
-    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar);
-    const bestStat = finder.findBestSqueeze();
+    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar, saveResults);
+    finder.findBestSqueeze();
 
     cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })
 
-    return bestStat;
+    return finder.getAllAttemptsSqueezes();
 
 }

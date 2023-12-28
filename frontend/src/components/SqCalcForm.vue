@@ -73,22 +73,22 @@
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.percentBuy')}:`">
-                <el-input-number v-model="calcForm.percentBuy.from" :precision="1" :step="0.1" :min="0.5" />
+              <el-form-item :label="`${$t('main.percentBuy')}:`" prop="percentBuyFrom">
+                <el-input-number v-model="calcForm.percentBuyFrom" :precision="1" :step="0.1" :min="0.5" />
               </el-form-item>
               <span class="separator" />
-              <el-form-item>
-                <el-input-number v-model="calcForm.percentBuy.to" :precision="1" :step="0.1" :min="0.5" />
+              <el-form-item prop="percentBuyTo">
+                <el-input-number v-model="calcForm.percentBuyTo" :precision="1" :step="0.1" :min="0.5" />
               </el-form-item>
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.percentSell')}:`">
-                <el-input-number v-model="calcForm.percentSell.from" :precision="1" :step="0.1" :min="0.5" />
+              <el-form-item :label="`${$t('main.percentSell')}:`" prop="percentSellFrom">
+                <el-input-number v-model="calcForm.percentSellFrom" :precision="1" :step="0.1" :min="0.5" />
               </el-form-item>
               <span class="separator" />
-              <el-form-item>
-                <el-input-number v-model="calcForm.percentSell.to" :precision="1" :step="0.1" :min="0.5" />
+              <el-form-item prop="percentSellTo">
+                <el-input-number v-model="calcForm.percentSellTo" :precision="1" :step="0.1" :min="0.5" />
               </el-form-item>
             </div>
 
@@ -331,14 +331,10 @@ export default class SqCalcForm extends Vue {
       [SqueezeBindings.MID_HL]: false,
       [SqueezeBindings.MID_OC]: false,
     },
-    percentBuy: {
-      from: 0.5,
-      to: 5,
-    },
-    percentSell: {
-      from: 0.5,
-      to: 5,
-    },
+    percentBuyFrom: 0.5,
+    percentBuyTo: 5,
+    percentSellFrom: 0.5,
+    percentSellTo: 5,
     stopLossTime: {
       isActive: true,
       from: 5,
@@ -370,6 +366,32 @@ export default class SqCalcForm extends Vue {
   calcFormRules: FormRules = {
     symbol: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     time: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    percentBuyFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    percentBuyTo: [{
+      validator: (rule, value, callback): void => {
+        if (!value) {
+            callback(new Error(t('validation.inputValue')));
+        } else if (value < this.calcForm.percentBuyFrom) {
+            callback(new Error(t('validation.lessThanPrev')));
+        } else {
+            callback();
+        }
+      },
+      trigger: ['blur', 'change']
+    }],
+    percentSellFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    percentSellTo: [{
+      validator: (rule, value, callback): void => {
+        if (!value) {
+            callback(new Error(t('validation.inputValue')));
+        } else if (value < this.calcForm.percentSellFrom) {
+            callback(new Error(t('validation.lessThanPrev')));
+        } else {
+            callback();
+        }
+      },
+      trigger: ['blur', 'change']
+    }]
   }
 
   downloadText = '';
@@ -378,13 +400,13 @@ export default class SqCalcForm extends Vue {
 
   setDownloadText(data) {
     if (data.startDownload) {
-      this.downloadText = 'Start download';
+      this.downloadText = 'Downloading';
     }
     if (data.downloadTime) {
       this.downloadTimeText += `Download in ${data.downloadTime} seconds. `;
     }
     if (data.startCalculate) {
-      this.downloadText = 'Start calculate';
+      this.downloadText = 'Calculating';
     }
     if (data.calculateTime) {
       this.downloadTimeText += `Calculate in ${data.calculateTime} seconds. `;
@@ -441,18 +463,21 @@ export default class SqCalcForm extends Vue {
       this.isNoTableData = true;
       return
     }
-    this.tableData = [{
-      binding: data.settings.binding || '-',
-      percentBuy: data.settings.percentBuy || '-',
-      percentSell: data.settings.percentSell || '-',
-      timeout: '-',
-      stopLossPercent: data.settings.stopLossPercent || '-',
-      totalDeals: data.totalDeals || '-',
-      totalProfitPercent: data.totalProfitPercent ? data.totalProfitPercent.toFixed(2) : '-',
-      coeff: data.coeff ? data.coeff.toFixed(2) : '-',
-      winrate: data.winRate ? data.winRate.toFixed(2) : '-',
-      action: '-',
-    }];
+    this.tableData = [];
+    for (const item of data) {
+      this.tableData.push({
+          binding: item.settings.binding || '-',
+          percentBuy: item.settings.percentBuy || '-',
+          percentSell: item.settings.percentSell || '-',
+          timeout: item.settings.stopLossTime || '-',
+          stopLossPercent: item.settings.stopLossPercent || '-',
+          totalDeals: item.totalDeals || '-',
+          totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : '-',
+          coeff: item.coeff ? item.coeff.toFixed(2) : '-',
+          winrate: item.winRate ? item.winRate.toFixed(2) : '-',
+          action: '-',
+      })
+    }
   }
 
   // - - -
@@ -479,14 +504,10 @@ export default class SqCalcForm extends Vue {
         [SqueezeBindings.MID_HL]: false,
         [SqueezeBindings.MID_OC]: false,
       },
-      percentBuy: {
-        from: 0.5,
-        to: 5,
-      },
-      percentSell: {
-        from: 0.5,
-        to: 5,
-      },
+      percentBuyFrom: 0.5,
+      percentBuyTo: 5,
+      percentSellFrom: 0.5,
+      percentSellTo: 5,
       stopLossTime: {
         isActive: true,
         from: 5,

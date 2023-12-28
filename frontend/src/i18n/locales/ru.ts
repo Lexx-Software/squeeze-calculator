@@ -7,6 +7,7 @@ export default {
     },
     validation: {
         inputValue: 'Введите значение',
+        lessThanPrev: 'Меньше предыдущего'
     },
     main: {
         dataSettings: 'Основные настройки',
@@ -45,7 +46,7 @@ export default {
             binding: 'Привязка',
             percentBuy: 'Покупка %',
             percentSell: 'Продажа %',
-            timeout: 'Таймаут',
+            timeout: 'Таймаут (мин)',
             stopLossPercent: 'СЛ %',
             totalDeals: 'Кол-во сделок',
             totalProfitPercent: 'Профит',
