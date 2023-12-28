@@ -1,3 +1,69 @@
-.sq-calc-form {
+@import '@/assets/style/base/vars.scss';
 
+.sq-calc-form {
+    margin-top: 18px;
+    .form {
+        display: flex;
+        .additional-fields {
+            padding-left: 50px;
+            border-left: 0.5px solid $grey;
+        }
+        .level {
+            margin-bottom: 8px;
+            .title {
+                display: block;
+                font-size: 18px;
+                margin-bottom: 12px;
+                margin-left: 60px;
+            }
+            .el-form-item {
+                margin-bottom: 16px;
+            }
+            .el-input {
+                width: 220px;
+            }
+            .el-checkbox {
+                margin-right: 16px;
+            }
+            .block {
+                position: relative;
+                .is-active-checkbox {
+                    position: absolute;
+                    left: -14px;
+                    bottom: 1px;
+                }
+                .fee-item {
+                    position: relative;
+                    right: 60px;
+                }
+                .short-input {
+                    width: 100px;
+                }
+            }
+            .separator {
+                position: relative;
+                &::after {
+                    content: '-';
+                    position: absolute;
+                    bottom: 0;
+                    right: 11px;
+                    font-size: 24px;
+                }
+            }
+        }
+    }
+    .btn-block {
+        margin-left: 180px;
+        .el-button {
+            width: 120px;
+        }
+    } 
+    .download-block {
+        .text-block {
+            .item {
+                font-size: 12px;
+                color: $grey;
+            }
+        }
+    }
 }

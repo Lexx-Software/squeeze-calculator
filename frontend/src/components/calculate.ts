@@ -1,4 +1,4 @@
-// import { BestSqueezeFinder, ISqueezeOptimizationsParameters } from '../../../../engine/bestSqueezeFinder';
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters } from '../../../src/bestSqueezeFinder';
 import { BinanceExchange } from '../../../src/exchanges/binanceExchange';
 import { IProgressListener } from '../../../src/iProgressListener';
 
@@ -6,9 +6,11 @@ class ProgressBar implements IProgressListener {
     private _startTime: number | undefined;
     private _lastUpdateTime: number | undefined;
     private _lastPercent: number | undefined;
+    cb: any;
 
-    constructor() {
+    constructor(cb) {
         this.reset();
+        this.cb = cb;
     }
 
     onProgressUpdated(currentValue: number, total: number) {
@@ -18,7 +20,7 @@ class ProgressBar implements IProgressListener {
             return;
         }
 
-        console.log('\t progress: %s%%', percent.toFixed(2));
+        this.cb({ progress: percent.toFixed(2) })
         this._lastPercent = percent;
     }
 
@@ -33,16 +35,76 @@ class ProgressBar implements IProgressListener {
     }
 }
 
-export async function calculateData(formData: any): Promise<void> {
-    console.log('formData', formData); // @@@
+export async function calculateData(formData: any, cb): Promise<any> {
     const symbol = formData.symbol;
-    const from = Date.now() - 30 * 24 * 60 * 60 * 1000; // Date.now() - formData.time[0] // @@@
-    const to = Date.now(); // Date.now() - formData.time[1] // @@@
+    const from = new Date(formData.time[0]).getTime()
+    const to = new Date(formData.time[1]).getTime()
+    const commissionPercent = formData.fee;
+    const binding = [];
+    for (const key of Object.keys(formData.binding)) {
+        if (formData.binding[key] === true) {
+            binding.push(key);
+        }
+    }
+    const settings: ISqueezeOptimizationsParameters = {
+        percentBuy: {
+            from: formData.percentBuy.from,
+            to: formData.percentBuy.to,
+        },
+        percentSell: {
+            from: formData.percentSell.from,
+            to: formData.percentSell.to,
+        },
+        binding,
+        stopOnKlineClosed: formData.stopOnKlineClosed,
+        algorithm: formData.algorithm,
+        iterations: formData.iterations
+    }
+    if (formData.stopLossTime.isActive) {
+        settings.stopLossTime = {
+            from: formData.stopLossTime.from,
+            to: formData.stopLossTime.to,
+        }
+    }
+    if (formData.stopLossPercent.isActive) {
+        settings.stopLossPercent = {
+            from: formData.stopLossPercent.from,
+            to: formData.stopLossPercent.to,
+        }
+    }
+    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive) {
+        settings.filters = {};
+        if (formData.minNumDeals.isActive) {
+            settings.filters.minNumDeals = formData.minNumDeals.value;
+        }
+        if (formData.minCoeff.isActive) {
+            settings.filters.minCoeff = formData.minCoeff.value;
+        }
+        if (formData.minWinRate.isActive) {
+            settings.filters.minWinRate = formData.minWinRate.value;
+        }
+    }
+    
+    const progressBar = new ProgressBar(cb);
 
-    const progressBar = new ProgressBar();
+    cb({ startDownload: true })
 
     const exchange = new BinanceExchange(formData.exchange);
     const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
 
-    console.log('klines', klines); // @@@
+    const symbolsTickers = await exchange.getSymbolsTickers();
+
+    cb({ downloadTime: progressBar.getSpentSeconds().toFixed(3) })
+    
+    progressBar.reset()
+
+    cb({ startCalculate: true })
+
+    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar);
+    const bestStat = finder.findBestSqueeze();
+
+    cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })
+
+    return bestStat;
+
 }
