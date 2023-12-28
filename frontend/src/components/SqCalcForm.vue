@@ -366,7 +366,7 @@ export default class SqCalcForm extends Vue {
       value: 0,
     },
     algorithm: OptimizationAlgorithm.OMG,
-    iterations: 100,
+    iterations: 1000,
     saveResult: 20,
   };
 
@@ -481,7 +481,7 @@ export default class SqCalcForm extends Vue {
           binding: item.settings.binding,
           percentBuy: item.settings.percentBuy,
           percentSell: item.settings.percentSell,
-          stopLossTime: item.settings.stopLossTime,
+          stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : undefined,
           stopLossPercent: item.settings.stopLossPercent,
           totalDeals: item.totalDeals,
           totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : undefined,

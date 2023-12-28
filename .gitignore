@@ -1,10 +1,15 @@
 # Mac specific
 .DS_Store
 
-# node sources
+# sources
+frontend/**/*.js
+frontend/**/*.map
 src/**/*.js
 src/**/*.map
 cmd/**/*.js
 cmd/**/*.map
 node_modules
 package-lock.json
+
+# destination
+frontend/dist/

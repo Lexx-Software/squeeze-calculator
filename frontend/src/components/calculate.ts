@@ -2,25 +2,28 @@ import { BestSqueezeFinder, ISqueezeOptimizationsParameters } from '../../../src
 import { BinanceExchange } from '../../../src/exchanges/binanceExchange';
 import { IProgressListener } from '../../../src/iProgressListener';
 
+export function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class ProgressBar implements IProgressListener {
     private _startTime: number | undefined;
     private _lastUpdateTime: number | undefined;
     private _lastPercent: number | undefined;
-    cb: any;
 
-    constructor(cb) {
+    constructor(private _cb) {
         this.reset();
-        this.cb = cb;
     }
 
-    onProgressUpdated(currentValue: number, total: number) {
+    async onProgressUpdated(currentValue: number, total: number): Promise<void> {
         this._lastUpdateTime = Date.now();
         const percent = (currentValue / total) * 100;
         if (currentValue !== 0 && currentValue !== total && percent - Number(this._lastPercent || 0) < 5) {
             return;
         }
 
-        this.cb({ progress: percent.toFixed(2) })
+        this._cb({ progress: percent.toFixed(2) })
+        await sleep(1);
         this._lastPercent = percent;
     }
 
@@ -33,6 +36,12 @@ class ProgressBar implements IProgressListener {
         this._startTime = Date.now();
         this._lastUpdateTime = Date.now();
     }
+}
+
+const klinesCache = {
+    name: '',
+    klines: undefined,
+    tickers: undefined
 }
 
 export async function calculateData(formData: any, cb): Promise<any> {
@@ -90,10 +99,13 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     cb({ startDownload: true })
 
-    const exchange = new BinanceExchange(formData.exchange);
-    const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
-
-    const symbolsTickers = await exchange.getSymbolsTickers();
+    const klinesCacheName = `${formData.exchange}_${symbol}_${from}_${to}`;
+    if (klinesCache.name !== klinesCacheName) {
+        const exchange = new BinanceExchange(formData.exchange);
+        klinesCache.klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
+        klinesCache.tickers = await exchange.getSymbolsTickers();
+        klinesCache.name = klinesCacheName;
+    }
 
     cb({ downloadTime: progressBar.getSpentSeconds().toFixed(3) })
     
@@ -101,8 +113,10 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     cb({ startCalculate: true })
 
-    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar, saveResults);
-    finder.findBestSqueeze();
+    await sleep(1);
+
+    const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, settings, progressBar, saveResults);
+    await finder.findBestSqueeze();
 
     cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })
 
