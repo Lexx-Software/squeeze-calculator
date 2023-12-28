@@ -46,13 +46,14 @@ export default {
             binding: 'Привязка',
             percentBuy: 'Покупка %',
             percentSell: 'Продажа %',
-            timeout: 'Таймаут (мин)',
+            stopLossTime: 'Таймаут (мин)',
             stopLossPercent: 'СЛ %',
             totalDeals: 'Кол-во сделок',
             totalProfitPercent: 'Профит',
             coeff: 'Коэф.',
             winrate: 'Винрейт',
             action: 'Действие',
+            create: 'Создать'
         }
     },
 };

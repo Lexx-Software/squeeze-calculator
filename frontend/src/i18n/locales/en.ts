@@ -32,7 +32,7 @@ export default {
         stopOnKlineClosed: 'Stop on closing one-min candle',
         filters: 'Filters (experimental)',
         minNumDeals: 'Minimum number of deals',
-        minProfCoef: 'Minimum profit/loss coef.',
+        minCoeff: 'Minimum profit/loss coeff',
         minWinRate: 'Minimum winrate',
         optimizationSettings: 'Optimization settings',
         algorithm: 'Algorithm',
@@ -46,13 +46,14 @@ export default {
             binding: 'Binding',
             percentBuy: 'Buy %',
             percentSell: 'Sell %',
-            timeout: 'Timeout (min)',
+            stopLossTime: 'Timeout (min)',
             stopLossPercent: 'SL %',
             totalDeals: 'Num Deals',
             totalProfitPercent: 'Profit',
             coeff: 'Coeff',
             winrate: 'Winrate',
             action: 'Action',
+            create: 'Create'
         }
     },
 };

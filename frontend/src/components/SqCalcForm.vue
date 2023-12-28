@@ -31,7 +31,7 @@
                 </el-select>
               </el-form-item>
 
-              <el-form-item class="fee-item"  :label="`${$t('main.fee')} %:`">
+              <el-form-item class="fee-item" :label="`${$t('main.fee')} %:`" prop="fee">
                 <el-input class="short-input" v-model="calcForm.fee" />
               </el-form-item>
             </div>
@@ -237,61 +237,68 @@
       <el-table class="table" :data="tableData">
         <el-table-column :label="$t('main.table.binding')">
             <template #default="scope">
-                {{ scope.row.binding }}
+                {{ scope.row.binding || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.percentBuy')">
             <template #default="scope">
-                {{ scope.row.percentBuy }}
+                {{ scope.row.percentBuy || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.percentSell')">
             <template #default="scope">
-                {{ scope.row.percentSell }}
+                {{ scope.row.percentSell || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.timeout')">
+        <el-table-column :label="$t('main.table.stopLossTime')">
             <template #default="scope">
-                {{ scope.row.timeout }}
+                {{ scope.row.stopLossTime || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.stopLossPercent')">
             <template #default="scope">
-                {{ scope.row.stopLossPercent }}
+                {{ scope.row.stopLossPercent || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.totalDeals')">
             <template #default="scope">
-                {{ scope.row.totalDeals }}
+                {{ scope.row.totalDeals || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.totalProfitPercent')">
             <template #default="scope">
-                {{ scope.row.totalProfitPercent }}%
+                {{ `${scope.row.totalProfitPercent}%` || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.coeff')">
             <template #default="scope">
-                {{ scope.row.coeff }}
+                {{ scope.row.coeff || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.winrate')">
             <template #default="scope">
-                {{ scope.row.winrate }}
+                {{ scope.row.winrate || '-' }}
             </template>
         </el-table-column>
 
         <el-table-column :label="$t('main.table.action')">
             <template #default="scope">
                 {{ scope.row.action }}
+                <el-button
+                    type="primary"
+                    link
+                    @click="createStrategy(scope.row)"
+                >
+                  {{ $t('main.table.create') }}
+                </el-button>
             </template>
         </el-table-column>
       </el-table>
@@ -365,6 +372,7 @@ export default class SqCalcForm extends Vue {
 
   calcFormRules: FormRules = {
     symbol: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    fee: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     time: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     percentBuyFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     percentBuyTo: [{
@@ -418,6 +426,10 @@ export default class SqCalcForm extends Vue {
 
   async submitForm(): Promise<void> {
     try {
+      this.downloadText = '';
+      this.downloadTimeText = '';
+      this.tableData = undefined;
+
       // @ts-ignore
       await this.checkFormValid(this.$refs.calcFormRef);
 
@@ -426,7 +438,7 @@ export default class SqCalcForm extends Vue {
       this.setTableData(result);
 
       console.log('Result:', result);
-      console.log('Result:\n%s', JSON.stringify(result, null, 2));
+      // console.log('Result:\n%s', JSON.stringify(result, null, 2));
     } catch (err) {
       (this as any).$message({
           type: 'error',
@@ -459,25 +471,62 @@ export default class SqCalcForm extends Vue {
 
   setTableData(data) {
     this.tableData = undefined
-    if (!data) {
+    if (!data.dataArr) {
       this.isNoTableData = true;
       return
     }
     this.tableData = [];
-    for (const item of data) {
+    for (const item of data.dataArr) {
       this.tableData.push({
-          binding: item.settings.binding || '-',
-          percentBuy: item.settings.percentBuy || '-',
-          percentSell: item.settings.percentSell || '-',
-          timeout: item.settings.stopLossTime || '-',
-          stopLossPercent: item.settings.stopLossPercent || '-',
-          totalDeals: item.totalDeals || '-',
-          totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : '-',
-          coeff: item.coeff ? item.coeff.toFixed(2) : '-',
-          winrate: item.winRate ? item.winRate.toFixed(2) : '-',
-          action: '-',
+          binding: item.settings.binding,
+          percentBuy: item.settings.percentBuy,
+          percentSell: item.settings.percentSell,
+          stopLossTime: item.settings.stopLossTime,
+          stopLossPercent: item.settings.stopLossPercent,
+          totalDeals: item.totalDeals,
+          totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : undefined,
+          coeff: item.coeff ? item.coeff.toFixed(2) : undefined,
+          winrate: item.winRate ? item.winRate.toFixed(2) : undefined,
+          symbol: data.symbol,
+          exchange: data.exchange,
+          stopOnKlineClosed: data.stopOnKlineClosed,
       })
     }
+  }
+
+  getBindingForLink(value) {
+    switch (value) {
+      case SqueezeBindings.LOW: return 'l';
+      case SqueezeBindings.HIGH: return 'h';
+      case SqueezeBindings.OPEN: return 'o';
+      case SqueezeBindings.CLOSE: return 'c';
+      case SqueezeBindings.MID_HL: return 'hl';
+      case SqueezeBindings.MID_OC: return 'oc';
+      default: return undefined;
+    }
+  }
+
+  createStrategy(data) {
+    let link = `https://lexx-trade.com/strategy#t=s&s=${data.exchange}:${data.symbol}&tf=1m`;
+
+    // binding
+    link += `&bi=${this.getBindingForLink(data.binding)}`;
+    // buy/sell trigger
+    link += `&bt=${data.percentBuy}&st=${data.percentSell}`;
+    // sl time
+    if (data.stopLossTime) {
+      link += `&slt=1&sltv=${data.stopLossTime}`;
+    }
+    // sl perc
+    if (data.stopLossPercent) {
+      link += `&sl=${data.stopLossPercent}`;
+    }
+    // Stop on closing one-min candle
+    if (data.stopOnKlineClosed) {
+      link += '&slc=1';
+    }
+
+    window.open(link, '_blank');
   }
 
   // - - -

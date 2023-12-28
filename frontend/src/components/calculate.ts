@@ -106,6 +106,10 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })
 
-    return finder.getAllAttemptsSqueezes();
-
+    return {
+        symbol,
+        exchange: formData.exchange,
+        stopOnKlineClosed: formData.stopOnKlineClosed,
+        dataArr: finder.getAllAttemptsSqueezes(),
+    };
 }
