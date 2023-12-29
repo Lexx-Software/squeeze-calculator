@@ -43,6 +43,7 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import SqCalcForm from './components/SqCalcForm.vue';
+import { initAnalytics } from './analytics';
 
 @Options({
   components: {
@@ -52,6 +53,9 @@ import SqCalcForm from './components/SqCalcForm.vue';
 export default class App extends Vue {
   handleCommandLang(command: string): void {
     this.$i18n.locale = command;
+  }
+  created() {
+    initAnalytics();
   }
 }
 </script>
