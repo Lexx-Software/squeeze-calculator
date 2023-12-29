@@ -16,11 +16,3 @@ export interface IKline {
 export interface IKeyValueObject {
     [key: string]: any;
 }
-
-export interface ISqueezeDeal {
-    timeBuy: number;
-    timeSell: number;
-    priceBuy: number;
-    priceSell: number;
-    profitPercent: number;
-}

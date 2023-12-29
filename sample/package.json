@@ -1,0 +1,18 @@
+{
+  "name": "squeeze-sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cmd/cmdSample.ts",
+  "dependencies": {
+    "squeeze-utils": "file:../squeeze-utils"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

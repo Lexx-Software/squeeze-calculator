@@ -4,10 +4,10 @@
 # sources
 frontend/**/*.js
 frontend/**/*.map
-src/**/*.js
-src/**/*.map
-cmd/**/*.js
-cmd/**/*.map
+sample/**/*.js
+sample/**/*.map
+squeeze-utils/**/*.js
+squeeze-utils/**/*.map
 node_modules
 package-lock.json
 

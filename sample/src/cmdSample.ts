@@ -1,7 +1,7 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm } from "../src/bestSqueezeFinder";
-import { BinanceExchange } from "../src/exchanges/binanceExchange"
-import { IProgressListener } from "../src/iProgressListener";
-import { ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "../src/squeezeCalculator";
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm } from "squeeze-utils";
+import { BinanceExchange } from "squeeze-utils"
+import { IProgressListener } from "squeeze-utils";
+import { ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "squeeze-utils";
 
 class ProgressBar implements IProgressListener {
     private _startTime: number;

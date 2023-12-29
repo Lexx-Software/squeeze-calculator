@@ -334,8 +334,7 @@ import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
 import { EXCHANGE, EXCHANGE_TEXT } from '../enum';
-import { OptimizationAlgorithm } from '../../../src/bestSqueezeFinder';
-import { SqueezeBindings } from '../../../src/squeezeCalculator';
+import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 

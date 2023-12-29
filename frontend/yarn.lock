@@ -5427,6 +5427,14 @@
     "select-hose" "^2.0.0"
     "spdy-transport" "^3.0.0"
 
+"squeeze-utils@file:../squeeze-utils":
+  "resolved" "file:../squeeze-utils"
+  "version" "1.0.0"
+  dependencies:
+    "bent" "^7.3.12"
+    "optimization-js" "^1.5.0"
+    "query-string" "^6.11.1"
+
 "ssri@^8.0.1":
   "integrity" "sha512-97qShzy1AiyxvPNIkLWoGua7xoQzzPjQ0HAH4B0rWKo7SZ6USuPcrUiAFrws0UH8RrbWmgq3LMTObhPIHbbBeQ=="
   "resolved" "https://registry.npmmirror.com/ssri/-/ssri-8.0.1.tgz"
