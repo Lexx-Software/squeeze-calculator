@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "squeeze-utils"
+		},
+		{
+			"path": "sample"
+		},
+		{
+			"path": "frontend"
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"Klines"
+		]
+	}
+}

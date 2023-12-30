@@ -93,6 +93,11 @@ export class SqueezeCalculator {
     private _checkSellHappensInKline(kline: IKline, deal: ISqueezeDeal, sellPrice: number, stopLossPrice: number|undefined, sellBinding: 'high' | 'close' = 'high') {
         // be pessimistic, first check stop-losses and then sell
         if (stopLossPrice && kline.low <= stopLossPrice) {
+            if (this._params.stopOnKlineClosed && sellPrice < kline.close) {
+                deal.timeSell = kline.closeTime;
+                deal.priceSell = sellPrice;
+                return true;
+            }
             // stop by price
             deal.isPercentStopLoss = true;
             deal.timeSell = kline.closeTime;
@@ -101,6 +106,11 @@ export class SqueezeCalculator {
         }
 
         if (this._params.stopLossTime && kline.closeTime - deal.timeBuy > this._params.stopLossTime) {
+            if (this._params.stopOnKlineClosed && sellPrice < kline.close) {
+                deal.timeSell = kline.closeTime;
+                deal.priceSell = sellPrice;
+                return true;
+            }
             // stop by time
             deal.isTimeStopLoss = true;
             deal.timeSell = kline.closeTime;

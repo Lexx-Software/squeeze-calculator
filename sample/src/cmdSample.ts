@@ -1,7 +1,5 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm } from "../src/bestSqueezeFinder";
-import { BinanceExchange } from "../src/exchanges/binanceExchange"
-import { IProgressListener } from "../src/iProgressListener";
-import { SqueezeBindings } from "../src/squeezeCalculator";
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm, BinanceExchange,
+         IProgressListener, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "squeeze-utils";
 
 class ProgressBar implements IProgressListener {
     private _startTime: number;
@@ -12,7 +10,7 @@ class ProgressBar implements IProgressListener {
         this.reset();
     }
 
-    onProgressUpdated(currentValue: number, total: number) {
+    async onProgressUpdated(currentValue: number, total: number) {
         this._lastUpdateTime = Date.now();
         const percent = currentValue / total * 100;
         if (currentValue !== 0 && currentValue !== total && percent - this._lastPercent < 5) {
@@ -47,11 +45,37 @@ async function main(symbol: string, from: number, to: number, commissionPercent:
     console.log('Starting calculation...')
     progressBar.reset()
     const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar);
-    const bestStat =  finder.findBestSqueeze();
+    const bestStat =  await finder.findBestSqueeze();
     console.log('Finished calculation in %s seconds', progressBar.getSpentSeconds().toFixed(3))
 
     console.log('Result:\n%s', JSON.stringify(bestStat, null, 2));
 }
+
+async function calculateOne(symbol: string, from: number, to: number, commissionPercent: number, params: ISqueezeParameters) {
+    const progressBar = new ProgressBar();
+
+    console.log('Starting downloading data...')
+    const exchange = new BinanceExchange('binance')
+    const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
+    const symbolsTickers = await exchange.getSymbolsTickers();
+    console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
+    
+    const squeezeCalculator = new SqueezeCalculator(params, symbolsTickers[symbol], commissionPercent);
+    const stat = squeezeCalculator.calculate(klines);
+
+    console.log('Result:\n%s', JSON.stringify(stat, null, 2));
+}
+
+/*
+// Example how to get the statistic for special config
+calculateOne('ETHUSDT', 1698793200000, 1701385200000, 0.075, {
+    percentBuy: 0.5,
+    percentSell: 2.7,
+    binding: SqueezeBindings.LOW,
+    stopLossTime: 44 * 60 * 1000,
+    stopOnKlineClosed: true
+});
+*/
 
 
 main('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {

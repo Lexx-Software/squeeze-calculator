@@ -1,0 +1,19 @@
+.wrp {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+
+.hide {
+  display: none;
+}
+
+.single-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .main-cont {
+    flex-grow: 1;
+  }
+}

@@ -5,7 +5,7 @@ import { IKline } from "./types";
 import { sortedArrayIndex } from './utils';
 
 export enum OptimizationAlgorithm {
-    OMG = 'OMG',        // recommended
+    OMG = 'OMG',
     RANDOM = 'random'
 }
 
@@ -20,8 +20,8 @@ export interface ISqueezeOptimizationsParameters {
     };
     binding: SqueezeBindings[];
     stopLossTime?: {
-        from: number;
-        to: number;
+        from: number;   // mins
+        to: number;     // mins
     };
     stopLossPercent?:{
         from: number;
@@ -38,8 +38,8 @@ export interface ISqueezeOptimizationsParameters {
 }
 
 const OptimizationJsFunctionsMap: {[name: string]: string} = {
-    [OptimizationAlgorithm.RANDOM]: 'dummy_minimize',
-    [OptimizationAlgorithm.OMG]: 'rs_minimize'
+    [OptimizationAlgorithm.RANDOM]: 'RandomOptimizer',
+    [OptimizationAlgorithm.OMG]: 'OMGOptimizer'
 }
 
 export class BestSqueezeFinder {
@@ -91,17 +91,6 @@ export class BestSqueezeFinder {
             }
         }
 
-        for (let i = 0; i < this._topIterations.length; i++) {
-            if (this._topIterations[i].settings.percentBuy == stat.settings.percentBuy 
-                && this._topIterations[i].settings.percentSell == stat.settings.percentSell
-                && this._topIterations[i].settings.binding == stat.settings.binding
-                && this._topIterations[i].settings.stopOnKlineClosed == stat.settings.stopOnKlineClosed
-                && this._topIterations[i].settings.stopLossPercent == stat.settings.stopLossPercent
-                && this._topIterations[i].settings.stopLossTime == stat.settings.stopLossTime) {
-                console.log('12412351');
-            }
-        }
-
         this._topIterations.splice(insertIdxLeft, 0, stat);
 
         if (this._topIterations.length > this._numTopTries) {
@@ -129,16 +118,16 @@ export class BestSqueezeFinder {
         return true;
     }
 
-    private _squeezeOptimizationFunctionOptimjs(x: any[]) {
+    private async _squeezeOptimizationFunctionOptimjs(x: any[]): Promise<number> {
         const params: ISqueezeParameters = {
             percentBuy: x[0] / 10,
             percentSell: x[1] / 10,
             binding: x[2],
-            stopLossTime: x[3],
+            stopLossTime: x[3] ? x[3] * 60 * 1000 : undefined,
             stopLossPercent: x[4] ? x[4] / 10 : undefined,
             stopOnKlineClosed: x[5]
         }
-        this._progressBar?.onProgressUpdated(this._currentIteration++, this._params.iterations)
+        await this._progressBar?.onProgressUpdated(this._currentIteration++, this._params.iterations)
         const squeezeCalculator = new SqueezeCalculator(params, this._symbolsTicker, this._commissionPercent);
     
         const stat = squeezeCalculator.calculate(this._klines);
@@ -166,7 +155,15 @@ export class BestSqueezeFinder {
         return -stat.totalProfitPercent;
     }
 
-    findBestSqueeze(): ISqueezeDealsStatistic {
+    async _optimizationJsMinimize(optimizer): Promise<void> {
+        for(var iter=0; iter < this._params.iterations; iter++){
+            var x = optimizer.ask()
+            var y = await this._squeezeOptimizationFunctionOptimjs(x)
+            optimizer.tell([x], [y])
+        }
+    }
+
+    async findBestSqueeze(): Promise<ISqueezeDealsStatistic> {
         this._currentIteration = 0;
         this._topIterations = []
 
@@ -179,9 +176,9 @@ export class BestSqueezeFinder {
             optimjs.Categorical([this._params.stopOnKlineClosed || false])                          // stopOnKlineClosed
         ];
  
-        optimjs[OptimizationJsFunctionsMap[this._params.algorithm]](this._squeezeOptimizationFunctionOptimjs.bind(this), dims, this._params.iterations)
+        await this._optimizationJsMinimize(optimjs[OptimizationJsFunctionsMap[this._params.algorithm]](dims));
 
-        this._progressBar?.onProgressUpdated(this._params.iterations, this._params.iterations);
+        await this._progressBar?.onProgressUpdated(this._params.iterations, this._params.iterations);
 
         return this._topIterations && this._topIterations[0];
     }

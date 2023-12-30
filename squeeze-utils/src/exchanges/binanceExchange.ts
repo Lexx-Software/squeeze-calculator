@@ -10,19 +10,40 @@ export interface ISymbolsTicker {
     [symbol: string]: number
 }
 
+interface IBinanceExchangeSettings {
+    baseUrl: string;
+    exchangeInfoPath: string;
+    getKlinesPath: string;
+    maxKlinesRequestLength: number;
+}
+
+const exchangeSettings: {[name: string]: IBinanceExchangeSettings} = {
+    binance: {
+        baseUrl: 'https://api.binance.com/',
+        exchangeInfoPath: 'api/v3/exchangeInfo',
+        getKlinesPath: 'api/v3/klines',
+        maxKlinesRequestLength: 1000
+    },
+    'binance-futures': {
+        baseUrl: 'https://fapi.binance.com/',
+        exchangeInfoPath: 'fapi/v1/exchangeInfo',
+        getKlinesPath: 'fapi/v1/klines',
+        maxKlinesRequestLength: 1500
+    }
+}
+
 const MAX_KLINES_REQUEST_LENGTH = 1000;
 
 export class BinanceExchange {
     private _getRequest: any;
+    private _settings: IBinanceExchangeSettings;
 
     constructor(exchange: 'binance' | 'binance-futures') {
-        if (exchange == 'binance') {
-            this._getRequest = bent('https://api.binance.com/', 'GET', 'json');
-        } else if (exchange == 'binance-futures') {
-            this._getRequest = bent('https://fapi.binance.com/', 'GET', 'json');
-        } else {
+        this._settings = exchangeSettings[exchange];
+        if (!this._settings) {
             throw new Error(`Unknown exchange ${exchange}`)
         }
+        this._getRequest = bent(this._settings.baseUrl, 'GET', 'json');
     }
 
     async _doApiPublicRequest(path: string, params?: IKeyValueObject): Promise<any> {
@@ -33,7 +54,7 @@ export class BinanceExchange {
     }
 
     async getSymbolsInfo(): Promise<IBinanceExchangeInfo> {
-        return await this._doApiPublicRequest('api/v3/exchangeInfo')
+        return await this._doApiPublicRequest(this._settings.exchangeInfoPath)
     }
 
     async getSymbolsTickers(): Promise<ISymbolsTicker> {
@@ -55,8 +76,8 @@ export class BinanceExchange {
         let currentDate = from;
 
         while (currentDate < Date.now() - TimeFrameSeconds[timeFrame]) {
-            progressListener?.onProgressUpdated(currentDate - from, to - from);
-            const d = await this._doApiPublicRequest('api/v3/klines', {
+            await progressListener?.onProgressUpdated(currentDate - from, to - from);
+            const d = await this._doApiPublicRequest(this._settings.getKlinesPath, {
                 symbol: symbol,
                 interval: timeFrame,
                 startTime: currentDate,
@@ -74,7 +95,7 @@ export class BinanceExchange {
             }
             currentDate = endTime + 1;
         }
-        progressListener?.onProgressUpdated(to - from, to - from);
+        await progressListener?.onProgressUpdated(to - from, to - from);
 
         return data.map(d => ({
             openTime: d[BinanceTickerNames.OPEN_TIME],
