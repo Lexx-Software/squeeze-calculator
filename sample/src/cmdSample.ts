@@ -1,7 +1,5 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm } from "squeeze-utils";
-import { BinanceExchange } from "squeeze-utils"
-import { IProgressListener } from "squeeze-utils";
-import { ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "squeeze-utils";
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm, BinanceExchange,
+         IProgressListener, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "squeeze-utils";
 
 class ProgressBar implements IProgressListener {
     private _startTime: number;
@@ -67,6 +65,17 @@ async function calculateOne(symbol: string, from: number, to: number, commission
 
     console.log('Result:\n%s', JSON.stringify(stat, null, 2));
 }
+
+/*
+// Example how to get the statistic for special config
+calculateOne('ETHUSDT', 1698793200000, 1701385200000, 0.075, {
+    percentBuy: 0.5,
+    percentSell: 2.7,
+    binding: SqueezeBindings.LOW,
+    stopLossTime: 44 * 60 * 1000,
+    stopOnKlineClosed: true
+});
+*/
 
 
 main('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {

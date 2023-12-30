@@ -9,5 +9,10 @@
 		{
 			"path": "frontend"
 		}
-	]
+	],
+	"settings": {
+		"cSpell.words": [
+			"Klines"
+		]
+	}
 }

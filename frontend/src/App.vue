@@ -55,7 +55,7 @@ export default class App extends Vue {
     this.$i18n.locale = command;
   }
   created() {
-    initAnalytics();
+    initAnalytics('G-CYHPBRLHZF');
   }
 }
 </script>
