@@ -187,6 +187,22 @@
                 />
               </el-form-item>
             </div>
+
+            <div class="block">
+              <el-form-item class="is-active-checkbox">
+                <el-checkbox v-model="calcForm.maxSellBuyRatio.isActive" />
+              </el-form-item>
+
+              <el-form-item :label="`${$t('main.maxSellBuyRatio')}:`">
+                <el-input-number
+                  v-model="calcForm.maxSellBuyRatio.value"
+                  :min="0"
+                  :precision="2"
+                  :step="0.01"
+                  :disabled="!calcForm.maxSellBuyRatio.isActive"
+                />
+              </el-form-item>
+            </div>
           </div>
 
           <!-- OPTIMIZATION -->
@@ -386,6 +402,10 @@ export default class SqCalcForm extends Vue {
       isActive: false,
       value: 0,
     },
+    maxSellBuyRatio: {
+      isActive: false,
+      value: 0.5,
+    },
     algorithm: OptimizationAlgorithm.OMG,
     iterations: 1000,
     saveResults: 20,
@@ -581,10 +601,10 @@ export default class SqCalcForm extends Vue {
         [SqueezeBindings.MID_HL]: false,
         [SqueezeBindings.MID_OC]: false,
       },
-      percentBuyFrom: 0.5,
-      percentBuyTo: 5,
+      percentBuyFrom: 1,
+      percentBuyTo: 6,
       percentSellFrom: 0.5,
-      percentSellTo: 5,
+      percentSellTo: 3,
       stopLossTime: {
         isActive: true,
         from: 5,
@@ -592,8 +612,8 @@ export default class SqCalcForm extends Vue {
       },
       stopLossPercent: {
         isActive: false,
-        from: 0,
-        to: 0,
+        from: 1,
+        to: 10,
       },
       stopOnKlineClosed: true,
       minNumDeals: {
@@ -607,6 +627,10 @@ export default class SqCalcForm extends Vue {
       minWinRate: {
         isActive: false,
         value: 0,
+      },
+      maxSellBuyRatio: {
+        isActive: false,
+        value: 0.5,
       },
       algorithm: OptimizationAlgorithm.OMG,
       iterations: 100,

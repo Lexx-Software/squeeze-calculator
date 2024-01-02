@@ -34,6 +34,7 @@ export interface ISqueezeOptimizationsParameters {
         minNumDeals?: number;
         minCoeff?: number;
         minWinRate?: number;
+        maxSellBuyRatio?: number;
     }
 }
 
@@ -128,8 +129,14 @@ export class BestSqueezeFinder {
             stopOnKlineClosed: x[5]
         }
         await this._progressBar?.onProgressUpdated(this._currentIteration++, this._params.iterations)
+
+        // check maxSellBuyRatio
+        if (this._params.filters?.maxSellBuyRatio && (this._params.filters.maxSellBuyRatio + 0.1e-10) < params.percentSell / params.percentBuy) {
+            return 0;
+        }
+
+        // do calculation
         const squeezeCalculator = new SqueezeCalculator(params, this._symbolsTicker, this._commissionPercent);
-    
         const stat = squeezeCalculator.calculate(this._klines);
         const passesFilters = this._passesUserFilters(stat);
         if (stat.totalDeals > 0 && passesFilters) {

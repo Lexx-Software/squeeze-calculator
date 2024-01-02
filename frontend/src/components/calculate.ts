@@ -83,7 +83,7 @@ export async function calculateData(formData: any, cb): Promise<any> {
     if (!formData.stopLossTime.isActive && !formData.stopLossPercent.isActive) {
         settings.stopOnKlineClosed = false;
     }
-    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive) {
+    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
         settings.filters = {};
         if (formData.minNumDeals.isActive) {
             settings.filters.minNumDeals = formData.minNumDeals.value;
@@ -93,6 +93,9 @@ export async function calculateData(formData: any, cb): Promise<any> {
         }
         if (formData.minWinRate.isActive) {
             settings.filters.minWinRate = formData.minWinRate.value;
+        }
+        if (formData.maxSellBuyRatio.isActive) {
+            settings.filters.maxSellBuyRatio = formData.maxSellBuyRatio.value;
         }
     }
     
