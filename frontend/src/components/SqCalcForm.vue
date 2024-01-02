@@ -217,8 +217,8 @@
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.saveResult')}:`">
-                <el-input-number v-model="calcForm.saveResult" :min="0" />
+              <el-form-item :label="`${$t('main.saveResults')}:`">
+                <el-input-number v-model="calcForm.saveResults" :min="0" />
               </el-form-item>
             </div>
           </div>
@@ -359,10 +359,10 @@ export default class SqCalcForm extends Vue {
       [SqueezeBindings.MID_HL]: false,
       [SqueezeBindings.MID_OC]: false,
     },
-    percentBuyFrom: 0.5,
-    percentBuyTo: 5,
+    percentBuyFrom: 1,
+    percentBuyTo: 6,
     percentSellFrom: 0.5,
-    percentSellTo: 5,
+    percentSellTo: 3,
     stopLossTime: {
       isActive: true,
       from: 5,
@@ -370,8 +370,8 @@ export default class SqCalcForm extends Vue {
     },
     stopLossPercent: {
       isActive: false,
-      from: 0,
-      to: 0,
+      from: 1,
+      to: 10,
     },
     stopOnKlineClosed: true,
     minNumDeals: {
@@ -388,7 +388,7 @@ export default class SqCalcForm extends Vue {
     },
     algorithm: OptimizationAlgorithm.OMG,
     iterations: 1000,
-    saveResult: 20,
+    saveResults: 20,
   };
 
   calcFormRules: FormRules = {
@@ -610,7 +610,7 @@ export default class SqCalcForm extends Vue {
       },
       algorithm: OptimizationAlgorithm.OMG,
       iterations: 100,
-      saveResult: 20,
+      saveResults: 20,
     };
     // @ts-ignore
     this.$refs.calcFormRef.resetFields();

@@ -43,7 +43,7 @@ const klinesCache = {
 }
 
 export async function calculateData(formData: any, cb): Promise<any> {
-    const symbol = formData.symbol;
+    const symbol = formData.symbol.toUpperCase();
     const from = new Date(formData.time[0]).getTime()
     const to = new Date(formData.time[1]).getTime()
     const commissionPercent = formData.fee;
