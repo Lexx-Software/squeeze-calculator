@@ -63,6 +63,18 @@ export default {
             winrate: 'Винрейт',
             action: 'Действие',
             create: 'Создать'
+        },
+        deals: {
+            close: 'Закрыть',
+            title: 'Сделки',
+            timeBuy: 'Время покупки',
+            timeSell: 'Время продажи',
+            priceBuy: 'Цена покупки',
+            priceSell: 'Цена продажи',
+            profitPercent: 'Профит',
+            stopLoss: 'Cтоплосс',
+            byTime: 'Временной',
+            byPercent: 'Процентный'
         }
     },
 };

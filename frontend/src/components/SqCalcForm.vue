@@ -337,7 +337,13 @@
 
         <el-table-column :label="$t('main.table.totalDeals')">
             <template #default="scope">
-                {{ scope.row.totalDeals || '-' }}
+                <el-button
+                    type="info"
+                    link
+                    @click="openDealsModal(scope.row.deals)"
+                >
+                  {{ scope.row.totalDeals || '-' }}
+                </el-button>
             </template>
         </el-table-column>
 
@@ -374,6 +380,60 @@
       </el-table>
       </el-config-provider>
     </div>
+
+    <!-- DEALS -->
+    <el-dialog
+      v-model="dealsModalVisible"
+      :title="$t('main.deals.title')"
+      width="80%"
+      @close="handleCloseDealsModal"
+    >
+      <el-table class="table" :data="dealsTableData">
+        <el-table-column :label="$t('main.deals.timeBuy')">
+            <template #default="scope">
+                {{ getDealTime(scope.row.timeBuy) }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.deals.timeSell')">
+            <template #default="scope">
+                {{ getDealTime(scope.row.timeSell) }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.deals.priceBuy')">
+            <template #default="scope">
+                {{ scope.row.priceBuy || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.deals.priceSell')">
+            <template #default="scope">
+                {{ scope.row.priceSell || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.deals.profitPercent')">
+            <template #default="scope">
+                <span :class="{ red: Number(scope.row.profitPercent) < 0 }">
+                  {{ Number(scope.row.profitPercent).toFixed(2) }}%
+                </span>
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.deals.stopLoss')">
+            <template #default="scope">
+                {{ scope.row.isTimeStopLoss ? $t('main.deals.byTime') : (scope.row.isPercentStopLoss ? $t('main.deals.byPercent') : '-') }}
+            </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button type="primary" @click="dealsModalVisible = false">
+            {{ $t('main.deals.close') }}
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -589,6 +649,7 @@ export default class SqCalcForm extends Vue {
           stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : undefined,
           stopLossPercent: item.settings.stopLossPercent,
           totalDeals: item.totalDeals,
+          deals: item.deals,
           totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : undefined,
           coeff: item.coeff ? item.coeff.toFixed(2) : undefined,
           winrate: item.winRate ? item.winRate.toFixed(2) : undefined,
@@ -631,6 +692,30 @@ export default class SqCalcForm extends Vue {
       link += '&slc=1';
     }
     window.open(link, '_blank');
+  }
+
+  // Deals
+
+  dealsModalVisible = false
+  dealsTableData = [];
+
+  openDealsModal(deals) {
+    this.dealsTableData = deals;
+    this.dealsModalVisible = true
+  }
+
+  getDealTime(value) {
+    const date = new Date(value);
+    const day = `0${date.getDate()}`.substr(-2);
+    const month = `0${date.getMonth() + 1}`.substr(-2);
+    const year = `0${date.getFullYear()}`.substr(-2);
+    const hours = `0${date.getHours()}`.substr(-2);
+    const minutes = `0${date.getMinutes()}`.substr(-2);
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  }
+
+  handleCloseDealsModal() {
+    this.dealsTableData = [];
   }
 
   // - - -
