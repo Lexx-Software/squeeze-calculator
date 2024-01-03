@@ -63,6 +63,18 @@ export default {
             winrate: 'Winrate',
             action: 'Action',
             create: 'Create'
+        },
+        deals: {
+            close: 'Close',
+            title: 'Deals',
+            timeBuy: 'Buy time',
+            timeSell: 'Sell time',
+            priceBuy: 'Buy price',
+            priceSell: 'Sell price',
+            profitPercent: 'Profit',
+            stopLoss: 'Stoploss',
+            byTime: 'by time',
+            byPercent: 'by percent'
         }
     },
 };
