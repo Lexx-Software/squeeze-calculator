@@ -64,7 +64,6 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.percentSellTo,
         },
         binding,
-        stopOnKlineClosed: formData.stopOnKlineClosed,
         algorithm: formData.algorithm,
         iterations: formData.iterations
     }
@@ -80,8 +79,8 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.stopLossPercent.to,
         }
     }
-    if (!formData.stopLossTime.isActive && !formData.stopLossPercent.isActive) {
-        settings.stopOnKlineClosed = false;
+    if (formData.stopLossPercent.isActive) {
+        settings.stopOnKlineClosed = formData.stopOnKlineClosed;
     }
     if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
         settings.filters = {};
@@ -127,7 +126,7 @@ export async function calculateData(formData: any, cb): Promise<any> {
     return {
         symbol,
         exchange: formData.exchange,
-        stopOnKlineClosed: settings.stopOnKlineClosed,
+        stopOnKlineClosed: settings.stopOnKlineClosed || false,
         dataArr: finder.getAllAttemptsSqueezes(),
     };
 }

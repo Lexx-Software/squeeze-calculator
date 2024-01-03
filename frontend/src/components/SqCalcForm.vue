@@ -40,6 +40,11 @@
               <el-form-item :label="`${$t('main.symbol')}:`" prop="symbol">
                 <el-input v-model="calcForm.symbol" />
               </el-form-item>
+
+              
+              <el-form-item class="fee-item" :label="`${$t('main.timeframe')}`">
+                <el-input class="short-input" v-model="calcForm.timeframe" :disabled="true" />
+              </el-form-item>
             </div>
 
             <div class="block">
@@ -50,6 +55,8 @@
                   range-separator="-"
                   :start-placeholder="$t('main.from')"
                   :end-placeholder="$t('main.to')"
+                  :default-value="[new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
+                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)]"
                 />
               </el-form-item>
             </div>
@@ -125,7 +132,7 @@
                 <el-checkbox
                   v-model="calcForm.stopOnKlineClosed"
                   :label="$t('main.stopOnKlineClosed')"
-                  :disabled="!calcForm.stopLossTime.isActive && !calcForm.stopLossPercent.isActive"
+                  :disabled="!calcForm.stopLossPercent.isActive"
                 />
               </el-form-item>
             </div>
@@ -212,7 +219,13 @@
             </span>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.algorithm')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.algorithm')}:`">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.algorithmTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-select v-model="calcForm.algorithm">
                     <el-option
                         :label="OptimizationAlgorithm.OMG"
@@ -227,13 +240,22 @@
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.iterations')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.iterations')}:`">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.iterationsTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-input-number v-model="calcForm.iterations" :min="0" />
               </el-form-item>
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.saveResults')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.saveResults')}:`">
+                <el-tooltip :content="$t('main.saveResultsTooltip')" placement="bottom" effect="light">
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-input-number v-model="calcForm.saveResults" :min="0" />
               </el-form-item>
             </div>
@@ -243,7 +265,9 @@
 
       <!-- BUTTON -->
       <div class="btn-block">
-        <el-button type="success" @click="submitForm">{{ $t('main.start') }}</el-button>
+        <el-button type="success" @click="submitForm" :disabled="loading">
+          {{ $t('main.start') }}
+        </el-button>
         <el-button @click="clearForm">{{ $t('main.reset') }}</el-button>
       </div>
     </el-config-provider>
@@ -265,13 +289,15 @@
     </div>
 
     <!--TABLE-->
-    <span v-if="isNoTableData" class="no-data-text">
-      {{ $t('main.noTableData') }}
-    </span>
-    <div v-if="tableData" class="table-block">
+    <div v-if="isShowTable" class="table-block">
       <span class="title">
-        {{ $t('main.results') }} ({{ resultsCount }}):
+        {{ $t('main.results', {
+          exchange: EXCHANGE_TEXT[calcForm.exchange],
+          symbol: calcForm.symbol,
+          timeframe: calcForm.timeframe,
+        }) }} ({{ resultsCount }}):
       </span>
+      <el-config-provider :locale="locale">
       <el-table class="table" :data="tableData">
         <el-table-column :label="$t('main.table.binding')">
             <template #default="scope">
@@ -311,7 +337,7 @@
 
         <el-table-column :label="$t('main.table.totalProfitPercent')">
             <template #default="scope">
-                {{ `${scope.row.totalProfitPercent}%` || '-' }}
+                {{ totalProfitPercent ? `${scope.row.totalProfitPercent}%` : '-' }}
             </template>
         </el-table-column>
 
@@ -340,6 +366,7 @@
             </template>
         </el-table-column>
       </el-table>
+      </el-config-provider>
     </div>
   </div>
 </template>
@@ -366,6 +393,7 @@ export default class SqCalcForm extends Vue {
     exchange: EXCHANGE.BINANCE,
     fee: 0.075,
     symbol: 'BTCUSDT',
+    timeframe: '1m',
     time: [],
     binding: {
       [SqueezeBindings.LOW]: true,
@@ -449,27 +477,31 @@ export default class SqCalcForm extends Vue {
 
   setDownloadText(data) {
     if (data.startDownload) {
-      this.downloadText = 'Downloading... ';
+      this.downloadText = `${t('main.downloading')}... `;
     }
     if (data.downloadTime && Number(data.downloadTime) !== 0) {
-      this.downloadTimeText += `Downloaded in ${data.downloadTime} seconds. `;
+      this.downloadTimeText += `${t('main.downloadedIn', { value: data.downloadTime })}. `;
     }
     if (data.startCalculate) {
-      this.downloadText = 'Calculating... ';
+      this.downloadText = `${t('main.calculating')}... `;
     }
     if (data.calculateTime) {
-      this.downloadTimeText += `Calculated in ${data.calculateTime} seconds. `;
+      this.downloadTimeText += `${t('main.calculatedIn', { value: data.calculateTime })}.`;
     }
     if (data.progress) {
       this.downloadProgress = data.progress;
     }
   }
 
+  loading = false;
+
   async submitForm(): Promise<void> {
     try {
+      this.loading = true;
       this.downloadText = '';
       this.downloadTimeText = '';
-      this.tableData = undefined;
+      this.tableData = [];
+      this.isShowTable = false;
       this.resultsCount = 0;
 
       if (Object.values(this.calcForm.binding).every((value) => value === false)) {
@@ -493,6 +525,7 @@ export default class SqCalcForm extends Vue {
       });
     } finally {
       this.downloadText = '';
+      this.loading = false;
     }
   }
 
@@ -511,18 +544,13 @@ export default class SqCalcForm extends Vue {
 
   // TABLE
 
-  tableData = undefined;
-  isNoTableData = false
+  tableData = [];
+  isShowTable = false;
   resultsCount = 0;
 
   setTableData(data) {
-    this.tableData = undefined
-    if (!data.dataArr) {
-      this.isNoTableData = true;
-      return
-    }
-    this.tableData = [];
-    for (const item of data.dataArr) {
+    this.isShowTable = true;
+    for (const item of data.dataArr || []) {
       this.resultsCount++
       this.tableData.push({
           binding: item.settings.binding,
@@ -572,7 +600,6 @@ export default class SqCalcForm extends Vue {
     if (data.stopOnKlineClosed) {
       link += '&slc=1';
     }
-
     window.open(link, '_blank');
   }
 
@@ -585,13 +612,15 @@ export default class SqCalcForm extends Vue {
   clearForm(): void {
     this.downloadText = '';
     this.downloadTimeText = '';
-    this.tableData = undefined;
+    this.isShowTable = false;
+    this.tableData = [];
     this.resultsCount = 0;
 
     this.calcForm = {
       exchange: EXCHANGE.BINANCE,
       fee: 0.075,
       symbol: 'BTCUSDT',
+      timeframe: '1m',
       time: [],
       binding: {
         [SqueezeBindings.LOW]: true,
