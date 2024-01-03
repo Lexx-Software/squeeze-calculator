@@ -1,6 +1,10 @@
 export default {
+    header: {
+        openPlatform: 'Open platform',
+    },
     footer: {
         copyright: '© {year} Lexx Software Co Ltd. All Rights Reserved',
+        text: 'This website uses Google Analytics to collect anonymous statistics about visitors in order to improve the user experience. <br>By continuing to use the site, you agree to the use of cookies.',
     },
     validation: {
         inputValue: 'Input value',
@@ -11,6 +15,7 @@ export default {
         exchange: 'Exchange',
         fee: 'Trading fee',
         symbol: 'Symbol',
+        timeframe: 'Timeframe',
         time: 'Time',
         from: 'From',
         to: 'To',
@@ -38,11 +43,14 @@ export default {
         saveResults: 'Save result',
         start: 'Start',
         reset: 'Reset',
-        results: 'Results',
+        results: 'Results for {exchange}, {symbol}, {timeframe}',
         downloading: 'Downloading',
         downloadedIn: 'Downloaded in {value} seconds',
         calculating: 'Calculating',
         calculatedIn: 'Calculated in {value} seconds',
+        algorithmTooltip: '● random - search randomly<br>● OMG - search in the vicinity of the previously found optimal solution',
+        iterationsTooltip: 'The number of iterations of the search algorithm. The more iterations, <br>the more optimal values will be obtained as a result, but it also requires more time for calculation. <br>The optimal value of this parameter depends on the chosen time and your computer power.',
+        saveResultsTooltip: 'The number of best results to be displayed in the resulting table.',
         table: {
             binding: 'Binding',
             percentBuy: 'Buy %',

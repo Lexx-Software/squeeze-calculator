@@ -40,6 +40,11 @@
               <el-form-item :label="`${$t('main.symbol')}:`" prop="symbol">
                 <el-input v-model="calcForm.symbol" />
               </el-form-item>
+
+              
+              <el-form-item class="fee-item" :label="`${$t('main.timeframe')}`">
+                <el-input class="short-input" v-model="calcForm.timeframe" :disabled="true" />
+              </el-form-item>
             </div>
 
             <div class="block">
@@ -212,7 +217,13 @@
             </span>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.algorithm')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.algorithm')}:`">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.algorithmTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-select v-model="calcForm.algorithm">
                     <el-option
                         :label="OptimizationAlgorithm.OMG"
@@ -227,13 +238,22 @@
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.iterations')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.iterations')}:`">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.iterationsTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-input-number v-model="calcForm.iterations" :min="0" />
               </el-form-item>
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.saveResults')}:`">
+              <el-form-item class="is-tooltip" :label="`${$t('main.saveResults')}:`">
+                <el-tooltip :content="$t('main.saveResultsTooltip')" placement="bottom" effect="light">
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
                 <el-input-number v-model="calcForm.saveResults" :min="0" />
               </el-form-item>
             </div>
@@ -243,7 +263,9 @@
 
       <!-- BUTTON -->
       <div class="btn-block">
-        <el-button type="success" @click="submitForm">{{ $t('main.start') }}</el-button>
+        <el-button type="success" @click="submitForm" :disabled="loading">
+          {{ $t('main.start') }}
+        </el-button>
         <el-button @click="clearForm">{{ $t('main.reset') }}</el-button>
       </div>
     </el-config-provider>
@@ -267,7 +289,11 @@
     <!--TABLE-->
     <div v-if="isShowTable" class="table-block">
       <span class="title">
-        {{ $t('main.results') }} ({{ resultsCount }}):
+        {{ $t('main.results', {
+          exchange: EXCHANGE_TEXT[calcForm.exchange],
+          symbol: calcForm.symbol,
+          timeframe: calcForm.timeframe,
+        }) }} ({{ resultsCount }}):
       </span>
       <el-config-provider :locale="locale">
       <el-table class="table" :data="tableData">
@@ -349,7 +375,7 @@ import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
 import { EXCHANGE, EXCHANGE_TEXT } from '../enum';
-import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils/src';
+import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 
@@ -365,6 +391,7 @@ export default class SqCalcForm extends Vue {
     exchange: EXCHANGE.BINANCE,
     fee: 0.075,
     symbol: 'BTCUSDT',
+    timeframe: '1m',
     time: [],
     binding: {
       [SqueezeBindings.LOW]: true,
@@ -464,8 +491,11 @@ export default class SqCalcForm extends Vue {
     }
   }
 
+  loading = false;
+
   async submitForm(): Promise<void> {
     try {
+      this.loading = true;
       this.downloadText = '';
       this.downloadTimeText = '';
       this.tableData = [];
@@ -493,6 +523,7 @@ export default class SqCalcForm extends Vue {
       });
     } finally {
       this.downloadText = '';
+      this.loading = false;
     }
   }
 
@@ -587,6 +618,7 @@ export default class SqCalcForm extends Vue {
       exchange: EXCHANGE.BINANCE,
       fee: 0.075,
       symbol: 'BTCUSDT',
+      timeframe: '1m',
       time: [],
       binding: {
         [SqueezeBindings.LOW]: true,

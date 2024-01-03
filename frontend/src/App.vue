@@ -6,6 +6,9 @@
         <img class="logo" alt="/" src="./assets/img/sc-logo.svg" />
       </div>
       <div class="settings-block">
+        <a class="link" href="https://lexx-trade.com" target="_blank">
+          {{ $t('header.openPlatform') }}
+        </a>
         <el-dropdown class="dropdown" trigger="click" @command="handleCommandLang">
           <span>
             {{ $i18n.locale.toUpperCase() }}
@@ -31,6 +34,7 @@
 
     <!-- footer -->
     <div class="footer">
+      <span class="text" v-html="$t('footer.text')" />
       <span class="copyright">
         {{ $t('footer.copyright', { year: new Date().getFullYear() }) }}
       </span>
@@ -70,8 +74,14 @@ export default class App extends Vue {
   .logo {
     width: 160px;
   }
+  .link {
+    color: $blue;
+    margin-right: 32px;
+  }
   .dropdown {
     cursor: pointer;
+    position: relative;
+    top: 4px;
   }
   .arrow-symbol {
     position: relative;
@@ -82,10 +92,14 @@ export default class App extends Vue {
 
 .footer {
   padding: 6px 0;
-  text-align: center;
-  .copyright {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  .copyright, .text {
     font-size: 12px;
     color: $grey;
+    line-height: 12px;
   }
 }
 </style>

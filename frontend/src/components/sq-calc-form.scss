@@ -43,6 +43,17 @@
                 .short-input {
                     width: 100px;
                 }
+                .is-tooltip {
+                    .el-form-item__label {
+                        padding: 0 32px 0 0;
+                    }
+                    .icon {
+                        width: 14px;
+                        position: absolute;
+                        top: 5px;
+                        left: -24px;
+                    }
+                }
             }
             .separator {
                 position: relative;

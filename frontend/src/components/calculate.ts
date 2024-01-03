@@ -1,4 +1,4 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener } from 'squeeze-utils/src';
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener } from 'squeeze-utils';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -79,8 +79,8 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.stopLossPercent.to,
         }
     }
-    if (formData.stopLossPercent.isActive && formData.stopOnKlineClosed) {
-        settings.stopOnKlineClosed = true;
+    if (formData.stopLossPercent.isActive) {
+        settings.stopOnKlineClosed = formData.stopOnKlineClosed;
     }
     if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
         settings.filters = {};
