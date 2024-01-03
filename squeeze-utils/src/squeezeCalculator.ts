@@ -106,15 +106,10 @@ export class SqueezeCalculator {
         }
 
         if (this._params.stopLossTime && kline.closeTime - deal.timeBuy > this._params.stopLossTime) {
-            if (this._params.stopOnKlineClosed && sellPrice < kline.close) {
-                deal.timeSell = kline.closeTime;
-                deal.priceSell = sellPrice;
-                return true;
-            }
             // stop by time
             deal.isTimeStopLoss = true;
             deal.timeSell = kline.closeTime;
-            deal.priceSell = this._params.stopOnKlineClosed ? kline.close : stopLossPrice as number;
+            deal.priceSell = kline.low;
             return true;
         }
 

@@ -180,7 +180,7 @@ export class BestSqueezeFinder {
             optimjs.Categorical(this._params.binding),                                              // binding
             this._params.stopLossTime ? optimjs.Integer(this._params.stopLossTime.from, this._params.stopLossTime.to) : optimjs.Categorical([undefined]),           // stopLossTime
             this._params.stopLossPercent ? optimjs.Integer(this._params.stopLossPercent.from * 10, this._params.stopLossPercent.to * 10) : optimjs.Categorical([undefined]),  // stopLossPercent
-            optimjs.Categorical([this._params.stopOnKlineClosed || false])                          // stopOnKlineClosed
+            optimjs.Categorical([this._params.stopOnKlineClosed])                                   // stopOnKlineClosed
         ];
  
         await this._optimizationJsMinimize(optimjs[OptimizationJsFunctionsMap[this._params.algorithm]](dims));
