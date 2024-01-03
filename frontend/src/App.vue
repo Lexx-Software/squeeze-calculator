@@ -3,11 +3,10 @@
     <!-- header -->
     <div class="header">
       <div class="logo-block">
-        <img alt="/" src="./assets/img/logo.svg" />
-        <span class="title">{{ $t('header.title') }}</span>
+        <img class="logo" alt="/" src="./assets/img/sc-logo.svg" />
       </div>
       <div class="settings-block">
-        <el-dropdown trigger="click" @command="handleCommandLang">
+        <el-dropdown class="dropdown" trigger="click" @command="handleCommandLang">
           <span>
             {{ $i18n.locale.toUpperCase() }}
             <span class="arrow-symbol">⌄</span>
@@ -68,10 +67,11 @@ export default class App extends Vue {
   justify-content: space-between;
   align-items: center;
   min-height: 60px;
-  .title {
-    font-size: 14px;
-    margin-left: 12px;
-    color: $grey;
+  .logo {
+    width: 160px;
+  }
+  .dropdown {
+    cursor: pointer;
   }
   .arrow-symbol {
     position: relative;

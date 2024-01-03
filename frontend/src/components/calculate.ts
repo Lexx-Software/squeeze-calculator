@@ -1,4 +1,4 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener } from 'squeeze-utils';
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener } from 'squeeze-utils/src';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -64,7 +64,6 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.percentSellTo,
         },
         binding,
-        stopOnKlineClosed: formData.stopOnKlineClosed,
         algorithm: formData.algorithm,
         iterations: formData.iterations
     }
@@ -80,8 +79,8 @@ export async function calculateData(formData: any, cb): Promise<any> {
             to: formData.stopLossPercent.to,
         }
     }
-    if (!formData.stopLossTime.isActive && !formData.stopLossPercent.isActive) {
-        settings.stopOnKlineClosed = false;
+    if (formData.stopLossPercent.isActive && formData.stopOnKlineClosed) {
+        settings.stopOnKlineClosed = true;
     }
     if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
         settings.filters = {};
@@ -127,7 +126,7 @@ export async function calculateData(formData: any, cb): Promise<any> {
     return {
         symbol,
         exchange: formData.exchange,
-        stopOnKlineClosed: settings.stopOnKlineClosed,
+        stopOnKlineClosed: settings.stopOnKlineClosed || false,
         dataArr: finder.getAllAttemptsSqueezes(),
     };
 }

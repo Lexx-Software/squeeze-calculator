@@ -1,7 +1,4 @@
 export default {
-    header: {
-        title: 'Lexx Squeeze Calculator',
-    },
     footer: {
         copyright: '© {year} Lexx Software Co Ltd. All Rights Reserved',
     },
@@ -41,8 +38,11 @@ export default {
         saveResults: 'Save result',
         start: 'Start',
         reset: 'Reset',
-        noTableData: 'No results for this settings',
         results: 'Results',
+        downloading: 'Downloading',
+        downloadedIn: 'Downloaded in {value} seconds',
+        calculating: 'Calculating',
+        calculatedIn: 'Calculated in {value} seconds',
         table: {
             binding: 'Binding',
             percentBuy: 'Buy %',

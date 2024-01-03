@@ -1,7 +1,4 @@
 export default {
-    header: {
-        title: 'Lexx Сквиз Калькулятор',
-    },
     footer: {
         copyright: '© {year} Lexx Software Co Ltd. Все права защищены',
     },
@@ -41,8 +38,11 @@ export default {
         saveResults: 'Сохранить результатов',
         start: 'Старт',
         reset: 'Сброс',
-        noTableData: 'Нет результатов для данных настроек',
         results: 'Результаты',
+        downloading: 'Загрузка',
+        downloadedIn: 'Загружено за {value} секунд',
+        calculating: 'Рассчет',
+        calculatedIn: 'Рассчитано за {value} секунд',
         table: {
             binding: 'Привязка',
             percentBuy: 'Покупка %',

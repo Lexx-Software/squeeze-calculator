@@ -125,7 +125,7 @@
                 <el-checkbox
                   v-model="calcForm.stopOnKlineClosed"
                   :label="$t('main.stopOnKlineClosed')"
-                  :disabled="!calcForm.stopLossTime.isActive && !calcForm.stopLossPercent.isActive"
+                  :disabled="!calcForm.stopLossPercent.isActive"
                 />
               </el-form-item>
             </div>
@@ -265,13 +265,11 @@
     </div>
 
     <!--TABLE-->
-    <span v-if="isNoTableData" class="no-data-text">
-      {{ $t('main.noTableData') }}
-    </span>
-    <div v-if="tableData" class="table-block">
+    <div v-if="isShowTable" class="table-block">
       <span class="title">
         {{ $t('main.results') }} ({{ resultsCount }}):
       </span>
+      <el-config-provider :locale="locale">
       <el-table class="table" :data="tableData">
         <el-table-column :label="$t('main.table.binding')">
             <template #default="scope">
@@ -311,7 +309,7 @@
 
         <el-table-column :label="$t('main.table.totalProfitPercent')">
             <template #default="scope">
-                {{ `${scope.row.totalProfitPercent}%` || '-' }}
+                {{ totalProfitPercent ? `${scope.row.totalProfitPercent}%` : '-' }}
             </template>
         </el-table-column>
 
@@ -340,6 +338,7 @@
             </template>
         </el-table-column>
       </el-table>
+      </el-config-provider>
     </div>
   </div>
 </template>
@@ -350,7 +349,7 @@ import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
 import { EXCHANGE, EXCHANGE_TEXT } from '../enum';
-import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils';
+import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils/src';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 
@@ -449,16 +448,16 @@ export default class SqCalcForm extends Vue {
 
   setDownloadText(data) {
     if (data.startDownload) {
-      this.downloadText = 'Downloading... ';
+      this.downloadText = `${t('main.downloading')}... `;
     }
     if (data.downloadTime && Number(data.downloadTime) !== 0) {
-      this.downloadTimeText += `Downloaded in ${data.downloadTime} seconds. `;
+      this.downloadTimeText += `${t('main.downloadedIn', { value: data.downloadTime })}. `;
     }
     if (data.startCalculate) {
-      this.downloadText = 'Calculating... ';
+      this.downloadText = `${t('main.calculating')}... `;
     }
     if (data.calculateTime) {
-      this.downloadTimeText += `Calculated in ${data.calculateTime} seconds. `;
+      this.downloadTimeText += `${t('main.calculatedIn', { value: data.calculateTime })}.`;
     }
     if (data.progress) {
       this.downloadProgress = data.progress;
@@ -469,7 +468,8 @@ export default class SqCalcForm extends Vue {
     try {
       this.downloadText = '';
       this.downloadTimeText = '';
-      this.tableData = undefined;
+      this.tableData = [];
+      this.isShowTable = false;
       this.resultsCount = 0;
 
       if (Object.values(this.calcForm.binding).every((value) => value === false)) {
@@ -511,18 +511,13 @@ export default class SqCalcForm extends Vue {
 
   // TABLE
 
-  tableData = undefined;
-  isNoTableData = false
+  tableData = [];
+  isShowTable = false;
   resultsCount = 0;
 
   setTableData(data) {
-    this.tableData = undefined
-    if (!data.dataArr) {
-      this.isNoTableData = true;
-      return
-    }
-    this.tableData = [];
-    for (const item of data.dataArr) {
+    this.isShowTable = true;
+    for (const item of data.dataArr || []) {
       this.resultsCount++
       this.tableData.push({
           binding: item.settings.binding,
@@ -572,7 +567,6 @@ export default class SqCalcForm extends Vue {
     if (data.stopOnKlineClosed) {
       link += '&slc=1';
     }
-
     window.open(link, '_blank');
   }
 
@@ -585,7 +579,8 @@ export default class SqCalcForm extends Vue {
   clearForm(): void {
     this.downloadText = '';
     this.downloadTimeText = '';
-    this.tableData = undefined;
+    this.isShowTable = false;
+    this.tableData = [];
     this.resultsCount = 0;
 
     this.calcForm = {
