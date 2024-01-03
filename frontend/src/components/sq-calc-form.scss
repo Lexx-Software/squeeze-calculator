@@ -36,9 +36,12 @@
                     left: -14px;
                     bottom: 1px;
                 }
-                .fee-item {
+                .right-item {
                     position: relative;
-                    right: 92px;
+                    right: 12px;
+                    .el-form-item__label {
+                        width: 100px !important;
+                    }
                 }
                 .short-input {
                     width: 100px;

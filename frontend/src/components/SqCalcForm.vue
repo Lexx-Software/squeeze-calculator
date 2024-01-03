@@ -19,7 +19,7 @@
 
             <div class="block">
               <el-form-item :label="`${$t('main.exchange')}:`">
-                <el-select v-model="calcForm.exchange">
+                <el-select v-model="calcForm.exchange" @change="(e) => getSymbols(e)">
                     <el-option
                         :label="EXCHANGE_TEXT[EXCHANGE.BINANCE]"
                         :value="EXCHANGE.BINANCE"
@@ -31,18 +31,24 @@
                 </el-select>
               </el-form-item>
 
-              <el-form-item class="fee-item" :label="`${$t('main.fee')} %:`" prop="fee">
+              <el-form-item class="right-item" :label="`${$t('main.fee')} %:`" prop="fee">
                 <el-input class="short-input" v-model="calcForm.fee" />
               </el-form-item>
             </div>
 
             <div class="block">
               <el-form-item :label="`${$t('main.symbol')}:`" prop="symbol">
-                <el-input v-model="calcForm.symbol" />
+                <!-- <el-input v-model="calcForm.symbol" /> -->
+
+                <el-autocomplete
+                  v-model="calcForm.symbol"
+                  :fetch-suggestions="querySearchSymbol"
+                  clearable
+                />
               </el-form-item>
 
               
-              <el-form-item class="fee-item" :label="`${$t('main.timeframe')}`">
+              <el-form-item class="right-item" :label="`${$t('main.timeframe')}:`">
                 <el-input class="short-input" v-model="calcForm.timeframe" :disabled="true" />
               </el-form-item>
             </div>
@@ -337,7 +343,7 @@
 
         <el-table-column :label="$t('main.table.totalProfitPercent')">
             <template #default="scope">
-                {{ totalProfitPercent ? `${scope.row.totalProfitPercent}%` : '-' }}
+                {{ scope.row.totalProfitPercent ? `${scope.row.totalProfitPercent}%` : '-' }}
             </template>
         </el-table-column>
 
@@ -377,7 +383,7 @@ import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
 import { EXCHANGE, EXCHANGE_TEXT } from '../enum';
-import { OptimizationAlgorithm, SqueezeBindings } from 'squeeze-utils';
+import { OptimizationAlgorithm, SqueezeBindings, BinanceExchange } from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 
@@ -542,6 +548,30 @@ export default class SqCalcForm extends Vue {
     });
   }
 
+  // Search symbol
+
+  symbolsList = [];
+
+  async getSymbols(exchange) {
+    const exchangeData = new BinanceExchange(exchange);
+    const tickers = await exchangeData.getSymbolsTickers();
+    const result = [];
+    for (const key of Object.keys(tickers)) {
+      result.push({ value: key });
+    }
+    this.symbolsList = result;
+  }
+
+  querySearchSymbol(queryString, cb) {
+    const symbols = this.symbolsList;
+    const results = queryString ? symbols.filter(this.createFilter(this.calcForm.symbol)) : symbols;
+    cb(results);
+  }
+
+  createFilter(queryString) {
+    return (symbol) => symbol.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0;
+  }
+
   // TABLE
 
   tableData = [];
@@ -667,6 +697,10 @@ export default class SqCalcForm extends Vue {
     };
     // @ts-ignore
     this.$refs.calcFormRef.resetFields();
+  }
+
+  created() {
+    this.getSymbols(this.calcForm.exchange)
   }
 }
 </script>

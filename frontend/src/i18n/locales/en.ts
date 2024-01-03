@@ -4,7 +4,7 @@ export default {
     },
     footer: {
         copyright: '© {year} Lexx Software Co Ltd. All Rights Reserved',
-        text: 'This website uses Google Analytics to collect anonymous statistics about visitors in order to improve the user experience. <br>By continuing to use the site, you agree to the use of cookies.',
+        text: 'This website uses Google Analytics to collect anonymous statistics about visitors in order to <br>improve the user experience. By continuing to use the site, you agree to the use of cookies.',
     },
     validation: {
         inputValue: 'Input value',
