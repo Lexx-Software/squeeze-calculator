@@ -92,14 +92,16 @@ export default class App extends Vue {
 
 .footer {
   padding: 6px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  text-align: center;
 
   .copyright, .text {
     font-size: 12px;
     color: $grey;
     line-height: 12px;
+    display: block;
+  }
+  .text {
+    margin-bottom: 6px;
   }
 }
 </style>
