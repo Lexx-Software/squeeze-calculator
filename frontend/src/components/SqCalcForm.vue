@@ -338,7 +338,7 @@
         <el-table-column :label="$t('main.table.totalDeals')">
             <template #default="scope">
                 <el-button
-                    type="info"
+                    type="primary"
                     link
                     @click="openDealsModal(scope.row.deals)"
                 >
