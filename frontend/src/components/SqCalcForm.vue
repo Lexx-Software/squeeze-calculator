@@ -55,6 +55,8 @@
                   range-separator="-"
                   :start-placeholder="$t('main.from')"
                   :end-placeholder="$t('main.to')"
+                  :default-value="[new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
+                    new Date(new Date().getFullYear(), new Date().getMonth(), 1)]"
                 />
               </el-form-item>
             </div>
