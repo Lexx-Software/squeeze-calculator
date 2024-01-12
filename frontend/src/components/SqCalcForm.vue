@@ -691,6 +691,7 @@ export default class SqCalcForm extends Vue {
     if (data.stopOnKlineClosed) {
       link += '&slc=1';
     }
+    link += '&utm_source=squeeze_calculator';
     window.open(link, '_blank');
   }
 

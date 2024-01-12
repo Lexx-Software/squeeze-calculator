@@ -123,6 +123,9 @@ export class SqueezeCalculator {
     }
 
     private _calculateDeal(klines: IKline[], i: number, buyPrice: number): {deal: ISqueezeDeal, index: number} {
+        if (klines[i].openTime == 1704896700000) {
+            console.log('XXXXX');
+        }
         const deal: ISqueezeDeal = {
             timeBuy: klines[i].openTime,
             timeSell: 0,
@@ -164,7 +167,7 @@ export class SqueezeCalculator {
                 deals.push(result.deal);
                 i = result.index;
             }
-            buyPrice = this._calculateBuyPriceForKline(kline);
+            buyPrice = this._calculateBuyPriceForKline(klines[i]);
         }
         return this.calculateDealsStatistic(deals);
     }

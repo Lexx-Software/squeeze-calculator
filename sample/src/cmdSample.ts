@@ -51,11 +51,11 @@ async function main(symbol: string, from: number, to: number, commissionPercent:
     console.log('Result:\n%s', JSON.stringify(bestStat, null, 2));
 }
 
-async function calculateOne(symbol: string, from: number, to: number, commissionPercent: number, params: ISqueezeParameters) {
+async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: string, from: number, to: number, commissionPercent: number, params: ISqueezeParameters) {
     const progressBar = new ProgressBar();
 
     console.log('Starting downloading data...')
-    const exchange = new BinanceExchange('binance')
+    const exchange = new BinanceExchange(exchangeName)
     const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
@@ -68,12 +68,11 @@ async function calculateOne(symbol: string, from: number, to: number, commission
 
 /*
 // Example how to get the statistic for special config
-calculateOne('ETHUSDT', 1698793200000, 1701385200000, 0.075, {
-    percentBuy: 0.5,
-    percentSell: 2.7,
+calculateOne('binance', 'AIUSDT', 1704841200000, 1704927600000, 0.075, {
+    percentBuy: 1,
+    percentSell: 0.9,
     binding: SqueezeBindings.LOW,
-    stopLossTime: 44 * 60 * 1000,
-    stopOnKlineClosed: true
+    stopLossTime: 120 * 60 * 1000
 });
 */
 
