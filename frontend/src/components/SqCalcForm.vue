@@ -582,7 +582,6 @@ export default class SqCalcForm extends Vue {
 
       this.setTableData(result);
 
-      console.log('Result:', result);
     } catch (err) {
       (this as any).$message({
           type: 'error',
@@ -680,12 +679,13 @@ export default class SqCalcForm extends Vue {
   }
 
   createStrategy(data) {
-    // sub domain is used for testing
-    let subDomain = '';
-    if (document.cookie.includes('subDomain')) {
-      const reg = /subDomain=\w+/gm;
-      subDomain = `${reg.exec(document.cookie)[0].replace('subDomain=', '')}.`;
-    }
+    // check and add sub domain (used for testing)
+    const cookiesObj: any = document.cookie.split('; ').reduce((prev, current) => {
+      const [name, ...value] = current.split('=');
+      prev[name] = value.join('=');
+      return prev;
+    }, {});
+    const subDomain = cookiesObj.subDomain ? `${cookiesObj.subDomain}.`: '';
 
     let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tf=1m&tu=1`;
 
