@@ -297,45 +297,45 @@
     <!--TABLE-->
     <div v-if="isShowTable" class="table-block">
       <span class="title">
-        {{ $t('main.results', {
-          exchange: EXCHANGE_TEXT[calcForm.exchange],
-          symbol: calcForm.symbol,
-          timeframe: calcForm.timeframe,
-        }) }} ({{ resultsCount }}):
+        {{ resultsText }}
       </span>
       <el-config-provider :locale="locale">
-      <el-table class="table" :data="tableData">
-        <el-table-column :label="$t('main.table.binding')">
+      <el-table
+        class="table"
+        :data="tableData"
+        :default-sort="{ prop: 'totalProfitPercent', order: 'descending' }"
+      >
+        <el-table-column :label="$t('main.table.binding')" prop="binding" :sortable="true">
             <template #default="scope">
                 {{ scope.row.binding || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.percentBuy')">
+        <el-table-column :label="$t('main.table.percentBuy')" prop="percentBuy" :sortable="true">
             <template #default="scope">
                 {{ scope.row.percentBuy || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.percentSell')">
+        <el-table-column :label="$t('main.table.percentSell')" prop="percentSell" :sortable="true">
             <template #default="scope">
                 {{ scope.row.percentSell || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.stopLossTime')">
+        <el-table-column :label="$t('main.table.stopLossTime')" prop="stopLossTime" :sortable="true">
             <template #default="scope">
                 {{ scope.row.stopLossTime || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.stopLossPercent')">
+        <el-table-column :label="$t('main.table.stopLossPercent')" prop="stopLossPercent" :sortable="true">
             <template #default="scope">
                 {{ scope.row.stopLossPercent || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.totalDeals')">
+        <el-table-column :label="$t('main.table.totalDeals')" prop="totalDeals" :sortable="true">
             <template #default="scope">
                 <el-button
                     type="primary"
@@ -347,19 +347,19 @@
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.totalProfitPercent')">
+        <el-table-column :label="$t('main.table.totalProfitPercent')" prop="totalProfitPercent" :sortable="true">
             <template #default="scope">
                 {{ scope.row.totalProfitPercent ? `${scope.row.totalProfitPercent}%` : '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.coeff')">
+        <el-table-column :label="$t('main.table.coeff')" prop="coeff" :sortable="true">
             <template #default="scope">
                 {{ scope.row.coeff || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.winrate')">
+        <el-table-column :label="$t('main.table.winrate')" prop="winrate" :sortable="true">
             <template #default="scope">
                 {{ scope.row.winrate || '-' }}
             </template>
@@ -569,6 +569,7 @@ export default class SqCalcForm extends Vue {
       this.tableData = [];
       this.isShowTable = false;
       this.resultsCount = 0;
+      this.resultsText = '';
 
       if (Object.values(this.calcForm.binding).every((value) => value === false)) {
         throw new Error(t('main.binding'))
@@ -637,6 +638,7 @@ export default class SqCalcForm extends Vue {
   tableData = [];
   isShowTable = false;
   resultsCount = 0;
+  resultsText = '';
 
   setTableData(data) {
     this.isShowTable = true;
@@ -658,6 +660,11 @@ export default class SqCalcForm extends Vue {
           stopOnKlineClosed: data.stopOnKlineClosed,
       })
     }
+    this.resultsText = `${t('main.results', {
+      exchange: EXCHANGE_TEXT[this.calcForm.exchange],
+      symbol: this.calcForm.symbol,
+      timeframe: this.calcForm.timeframe,
+    })} (${this.resultsCount}):`;
   }
 
   getBindingForLink(value) {
@@ -673,7 +680,14 @@ export default class SqCalcForm extends Vue {
   }
 
   createStrategy(data) {
-    let link = `https://lexx-trade.com/strategy#t=s&s=${data.exchange}:${data.symbol}&tf=1m`;
+    // sub domain is used for testing
+    let subDomain = '';
+    if (document.cookie.includes('subDomain')) {
+      const reg = /subDomain=\w+/gm;
+      subDomain = `${reg.exec(document.cookie)[0].replace('subDomain=', '')}.`;
+    }
+
+    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tf=1m&tu=1`;
 
     // binding
     link += `&bi=${this.getBindingForLink(data.binding)}`;
@@ -691,7 +705,6 @@ export default class SqCalcForm extends Vue {
     if (data.stopOnKlineClosed) {
       link += '&slc=1';
     }
-    link += '&utm_source=squeeze_calculator';
     window.open(link, '_blank');
   }
 
@@ -731,6 +744,7 @@ export default class SqCalcForm extends Vue {
     this.isShowTable = false;
     this.tableData = [];
     this.resultsCount = 0;
+    this.resultsText = '';
 
     this.calcForm = {
       exchange: EXCHANGE.BINANCE,

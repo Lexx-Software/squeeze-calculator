@@ -55,7 +55,7 @@ export default {
             binding: 'Binding',
             percentBuy: 'Buy %',
             percentSell: 'Sell %',
-            stopLossTime: 'Timeout (min)',
+            stopLossTime: 'Timeout',
             stopLossPercent: 'SL %',
             totalDeals: 'Num Deals',
             totalProfitPercent: 'Profit',
