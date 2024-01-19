@@ -680,11 +680,7 @@ export default class SqCalcForm extends Vue {
 
   createStrategy(data) {
     // check and add sub domain (used for testing)
-    const cookiesObj: any = document.cookie.split('; ').reduce((prev, current) => {
-      const [name, ...value] = current.split('=');
-      prev[name] = value.join('=');
-      return prev;
-    }, {});
+    const cookiesObj = this.getCookiesObj();
     const subDomain = cookiesObj.subDomain ? `${cookiesObj.subDomain}.`: '';
 
     let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tf=1m&tu=1`;
@@ -706,6 +702,15 @@ export default class SqCalcForm extends Vue {
       link += '&slc=1';
     }
     window.open(link, '_blank');
+  }
+
+  getCookiesObj() {
+    const cookiesObj: any = document.cookie.split('; ').reduce((prev, current) => {
+      const [name, ...value] = current.split('=');
+      prev[name] = value.join('=');
+      return prev;
+    }, {});
+    return cookiesObj;
   }
 
   // Deals
