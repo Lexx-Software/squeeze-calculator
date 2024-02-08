@@ -1,4 +1,5 @@
 import { IProgressListener } from "./iProgressListener";
+import { KlineBuilder } from "./klineBuilder";
 import { IKline } from "./types";
 import { decimalAdjust } from "./utils";
 
@@ -25,6 +26,7 @@ export interface ISqueezeDeal {
 export interface ISqueezeDealsStatistic {
     settings: ISqueezeParameters;
     totalProfitPercent: number;
+    totalCumulativePercent: number;
     totalDeals: number;
     numStopLossDeals: number;
     numProfitDeals: number;
@@ -37,6 +39,8 @@ export interface ISqueezeParameters {
     percentBuy: number;
     percentSell: number;
     binding: SqueezeBindings;
+    timeFrame: string;
+    oncePerCandle: boolean
     stopLossTime?: number;
     stopLossPercent?: number;
     stopOnKlineClosed?: boolean;
@@ -153,21 +157,39 @@ export class SqueezeCalculator {
         return {deal: deal, index: i}
     }
 
-    calculate(klines: IKline[], progressBar?: IProgressListener): ISqueezeDealsStatistic {
+    calculate(klines: IKline[], klinesTf: string, progressBar?: IProgressListener): ISqueezeDealsStatistic {
+        let lastDeal: ISqueezeDeal = undefined;
+        const klineBuilder = new KlineBuilder(this._params.timeFrame, klinesTf);
+
         const deals: ISqueezeDeal[] = [];
-        let buyPrice: number = 0;
+        let nextBuyPrice: number = 0;
         for (let i = 0; i < klines.length; i++) {
             progressBar?.onProgressUpdated(i, klines.length - 1)
             const kline = klines[i];
-            if (kline.low < buyPrice) {
-                const result = this._calculateDeal(klines, i, buyPrice);
-                deals.push(result.deal);
-                i = result.index;
-                if (i >= klines.length) {
-                    break;
-                }
+            const squeezeTfKline = klineBuilder.applyNewKline(klines[i]);
+            const currentBuyPrice = nextBuyPrice;
+            if (squeezeTfKline?.closed) {
+                nextBuyPrice = this._calculateBuyPriceForKline(squeezeTfKline);
             }
-            buyPrice = this._calculateBuyPriceForKline(klines[i]);
+
+            // there is a deal in progress
+            if (lastDeal && lastDeal.timeSell >= kline.openTime) {
+                continue;
+            }
+
+            // oncePerCandle logic
+            if (this._params.oncePerCandle && 
+                lastDeal && squeezeTfKline &&
+                lastDeal.timeSell >= squeezeTfKline.openTime) {
+                continue;
+            }
+
+            // check buy and sell
+            if (kline.low < currentBuyPrice) {
+                const result = this._calculateDeal(klines, i, currentBuyPrice);
+                lastDeal = result.deal;
+                deals.push(result.deal);
+            }
         }
         return this.calculateDealsStatistic(deals);
     }
@@ -176,6 +198,7 @@ export class SqueezeCalculator {
         const result: ISqueezeDealsStatistic = {
             settings: this._params,
             totalProfitPercent: 0,
+            totalCumulativePercent: 100,
             totalDeals: deals.length,
             numStopLossDeals: 0,
             numProfitDeals: 0,
@@ -188,6 +211,7 @@ export class SqueezeCalculator {
         let sumTakes = 0;
 
         for (const d of deals) {
+            result.totalCumulativePercent *= (1 + d.profitPercent);
             result.totalProfitPercent += d.profitPercent;
             if (d.profitPercent < 0) {
                 result.numStopLossDeals += 1;

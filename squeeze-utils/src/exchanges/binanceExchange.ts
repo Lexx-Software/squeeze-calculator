@@ -108,7 +108,8 @@ export class BinanceExchange {
             quoteVolume: parseFloat(d[BinanceTickerNames.QUOTE_ASSET_VOLUME]),
             trades: d[BinanceTickerNames.NUMBER_OF_TRADES],
             buyBaseVolume: parseFloat(d[BinanceTickerNames.TAKER_BUY_BASE_ASSET_VOLUME]),
-            buyQuoteVolume: parseFloat(d[BinanceTickerNames.TAKER_BUY_QUOTE_ASSET_VOLUME])
+            buyQuoteVolume: parseFloat(d[BinanceTickerNames.TAKER_BUY_QUOTE_ASSET_VOLUME]),
+            closed: true
         }));
     }
 }

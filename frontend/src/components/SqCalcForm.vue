@@ -46,11 +46,6 @@
                   clearable
                 />
               </el-form-item>
-
-              
-              <el-form-item class="right-item" :label="`${$t('main.timeframe')}:`">
-                <el-input class="short-input" v-model="calcForm.timeframe" :disabled="true" />
-              </el-form-item>
             </div>
 
             <div class="block">
@@ -73,6 +68,25 @@
             <span class="title">
               {{ $t('main.squeezeSearchArea') }}
             </span>
+
+            <div class="block">
+              <el-form-item :label="`${$t('main.timeframe')}:`">
+                <el-select v-model="calcForm.timeframe">
+                    <el-option :label="'1m'" :value="'1m'"/>
+                    <el-option :label="'3m'" :value="'3m'"/>
+                    <el-option :label="'5m'" :value="'5m'"/>
+                    <el-option :label="'15m'" :value="'15m'"/>
+                    <el-option :label="'30m'" :value="'30m'"/>
+                    <el-option :label="'1h'" :value="'1h'"/>
+                    <el-option :label="'2h'" :value="'2h'"/>
+                    <el-option :label="'4h'" :value="'4h'"/>
+                    <el-option :label="'6h'" :value="'6h'"/>
+                    <el-option :label="'8h'" :value="'8h'"/>
+                    <el-option :label="'12h'" :value="'12h'"/>
+                    <el-option :label="'1d'" :value="'1d'"/>
+                </el-select>
+              </el-form-item>
+            </div>
 
             <div class="block">
               <el-form-item :label="`${$t('main.binding')}:`">
@@ -102,6 +116,15 @@
               <span class="separator" />
               <el-form-item prop="percentSellTo">
                 <el-input-number v-model="calcForm.percentSellTo" :precision="1" :step="0.1" :min="0.5" />
+              </el-form-item>
+            </div>
+
+            <div class="block">
+              <el-form-item label=" ">
+                <el-checkbox
+                  v-model="calcForm.oncePerCandle"
+                  :label="$t('main.oncePerCandle')"
+                />
               </el-form-item>
             </div>
 
@@ -234,6 +257,10 @@
                 </el-tooltip>
                 <el-select v-model="calcForm.algorithm">
                     <el-option
+                        :label="OptimizationAlgorithm.GRID"
+                        :value="OptimizationAlgorithm.GRID"
+                    />
+                    <el-option
                         :label="OptimizationAlgorithm.OMG"
                         :value="OptimizationAlgorithm.OMG"
                     />
@@ -263,6 +290,27 @@
                   <img class="icon" src="../assets/img/info.svg" alt="/">
                 </el-tooltip>
                 <el-input-number v-model="calcForm.saveResults" :min="0" />
+              </el-form-item>
+            </div>
+
+            <div class="block">
+              <el-form-item class="is-tooltip"  :label="`${$t('main.downloadTimeFrame')}:`">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.downloadTimeFrameTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
+                <el-select v-model="calcForm.downloadTimeFrame">
+                    <el-option :label="'1m'" :value="'1m'"/>
+                    <el-option :label="'3m'" :value="'3m'"/>
+                    <el-option :label="'5m'" :value="'5m'"/>
+                    <el-option :label="'15m'" :value="'15m'"/>
+                    <el-option :label="'30m'" :value="'30m'"/>
+                    <el-option :label="'1h'" :value="'1h'"/>
+                    <el-option :label="'2h'" :value="'2h'"/>
+                    <el-option :label="'4h'" :value="'4h'"/>
+                </el-select>
               </el-form-item>
             </div>
           </div>
@@ -483,6 +531,7 @@ export default class SqCalcForm extends Vue {
       from: 1,
       to: 10,
     },
+    oncePerCandle: false,
     stopOnKlineClosed: true,
     minNumDeals: {
       isActive: false,
@@ -500,7 +549,8 @@ export default class SqCalcForm extends Vue {
       isActive: false,
       value: 0.5,
     },
-    algorithm: OptimizationAlgorithm.OMG,
+    algorithm: OptimizationAlgorithm.RANDOM,
+    downloadTimeFrame: '1m',
     iterations: 1000,
     saveResults: 20,
   };
@@ -649,6 +699,8 @@ export default class SqCalcForm extends Vue {
           percentSell: item.settings.percentSell,
           stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : undefined,
           stopLossPercent: item.settings.stopLossPercent,
+          timeFrame: item.settings.timeFrame,
+          oncePerCandle: item.settings.oncePerCandle,
           totalDeals: item.totalDeals,
           deals: item.deals,
           totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : undefined,
@@ -683,12 +735,21 @@ export default class SqCalcForm extends Vue {
     const cookiesObj = this.getCookiesObj();
     const subDomain = cookiesObj.subDomain ? `${cookiesObj.subDomain}.`: '';
 
-    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tf=1m&tu=1`;
+    (window as any).gtag('event', "on_create_strategy", {
+        exchange: data.exchange,
+        symbol: data.symbol,
+        timeframe: data.timeFrame
+    });
 
+    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tu=1`;
+    // time frame
+    link += `&tf=${data.timeFrame}`;
     // binding
     link += `&bi=${this.getBindingForLink(data.binding)}`;
     // buy/sell trigger
     link += `&bt=${data.percentBuy}&st=${data.percentSell}`;
+    // Once per candle
+    link += `&oc=${data.oncePerCandle ? 1 : 0}`;
     // sl time
     if (data.stopLossTime) {
       link += `&slt=1&sltv=${data.stopLossTime}`;
@@ -779,6 +840,7 @@ export default class SqCalcForm extends Vue {
         from: 1,
         to: 10,
       },
+      oncePerCandle: false,
       stopOnKlineClosed: true,
       minNumDeals: {
         isActive: false,
@@ -796,7 +858,8 @@ export default class SqCalcForm extends Vue {
         isActive: false,
         value: 0.5,
       },
-      algorithm: OptimizationAlgorithm.OMG,
+      algorithm: OptimizationAlgorithm.RANDOM,
+      downloadTimeFrame: '1m',
       iterations: 100,
       saveResults: 20,
     };

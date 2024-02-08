@@ -33,7 +33,7 @@ class ProgressBar implements IProgressListener {
 }
 
 
-async function main(symbol: string, from: number, to: number, commissionPercent: number, settings: ISqueezeOptimizationsParameters) {
+async function findBestSqueeze(symbol: string, from: number, to: number, commissionPercent: number, settings: ISqueezeOptimizationsParameters) {
     const progressBar = new ProgressBar();
 
     console.log('Starting downloading data...')
@@ -42,9 +42,11 @@ async function main(symbol: string, from: number, to: number, commissionPercent:
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
     
+        
+    console.log('Total possible variants: %s', BestSqueezeFinder.totalNumberVariants(settings));
     console.log('Starting calculation...')
     progressBar.reset()
-    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, settings, progressBar);
+    const finder = new BestSqueezeFinder(symbolsTickers[symbol], commissionPercent, klines, '1m', settings, progressBar);
     const bestStat =  await finder.findBestSqueeze();
     console.log('Finished calculation in %s seconds', progressBar.getSpentSeconds().toFixed(3))
 
@@ -59,25 +61,26 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
     const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
-    
+
     const squeezeCalculator = new SqueezeCalculator(params, symbolsTickers[symbol], commissionPercent);
-    const stat = squeezeCalculator.calculate(klines);
+    const stat = squeezeCalculator.calculate(klines, '1m');
 
     console.log('Result:\n%s', JSON.stringify(stat, null, 2));
 }
 
 /*
 // Example how to get the statistic for special config
-calculateOne('binance', 'AIUSDT', 1704841200000, 1704927600000, 0.075, {
-    percentBuy: 1,
-    percentSell: 0.9,
+calculateOne('binance', 'DATAUSDT', 1704063600000, 1704841200000, 0.075, {
+    percentBuy: 1.0,
+    percentSell: 0.5,
     binding: SqueezeBindings.LOW,
-    stopLossTime: 120 * 60 * 1000
+    stopLossTime: 24 * 60 * 1000,
+    timeFrame: '1m',
+    oncePerCandle: false
 });
 */
 
-
-main('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {
+findBestSqueeze('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {
     percentBuy: {
         from: 1,
         to: 10
@@ -95,6 +98,8 @@ main('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {
         from: 1,
         to: 10
     },
+    timeFrame: '1h',
+    oncePerCandle: true,
     stopOnKlineClosed: true,
     algorithm: OptimizationAlgorithm.OMG,
     iterations: 1000,

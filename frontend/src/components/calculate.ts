@@ -63,6 +63,8 @@ export async function calculateData(formData: any, cb): Promise<any> {
             from: formData.percentSellFrom,
             to: formData.percentSellTo,
         },
+        timeFrame: formData.timeframe,
+        oncePerCandle: formData.oncePerCandle,
         binding,
         algorithm: formData.algorithm,
         iterations: formData.iterations
@@ -100,12 +102,14 @@ export async function calculateData(formData: any, cb): Promise<any> {
     
     const progressBar = new ProgressBar(cb);
 
+    const klinesTimeFrame = formData.downloadTimeFrame;
+
     cb({ startDownload: true })
 
-    const klinesCacheName = `${formData.exchange}_${symbol}_${from}_${to}`;
+    const klinesCacheName = `${formData.exchange}_${symbol}_${klinesTimeFrame}_${from}_${to}`;
     if (klinesCache.name !== klinesCacheName) {
         const exchange = new BinanceExchange(formData.exchange);
-        klinesCache.klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
+        klinesCache.klines = await exchange.downloadKlines(symbol, klinesTimeFrame, from, to, progressBar);
         klinesCache.tickers = await exchange.getSymbolsTickers();
         klinesCache.name = klinesCacheName;
     }
@@ -118,7 +122,14 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     await sleep(1);
 
-    const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, settings, progressBar, saveResults);
+    (window as any).gtag('event', "on_calculate", {
+        exchange: formData.exchange,
+        symbol: symbol,
+        timeframe: settings.timeFrame,
+        period: (to - from) / (24 * 60 * 60 * 1000)
+    })
+
+    const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, klinesTimeFrame, settings, progressBar, saveResults);
     await finder.findBestSqueeze();
 
     cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })

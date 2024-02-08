@@ -10,7 +10,7 @@ export interface IKline {
     trades?: number;
     buyBaseVolume?: number;
     buyQuoteVolume?: number;
-    closed?: boolean;
+    closed: boolean;
 }
 
 export interface IKeyValueObject {
