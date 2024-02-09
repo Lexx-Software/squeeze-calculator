@@ -8,7 +8,8 @@ export default {
     },
     validation: {
         inputValue: 'Input value',
-        lessThanPrev: 'Less than previous'
+        lessThanPrev: 'Less than previous',
+        moreThanSqueezeTimeframe: 'More than "Squeeze timeframe"'
     },
     main: {
         dataSettings: 'Data settings',
@@ -50,6 +51,7 @@ export default {
         downloadedIn: 'Downloaded in {value} seconds',
         calculating: 'Calculating',
         calculatedIn: 'Calculated in {value} seconds',
+        max: 'Max.',
         algorithmTooltip: '● GRID - search by grid<br>● random - search randomly<br>● OMG - search in the vicinity of the previously found optimal solution',
         iterationsTooltip: 'The number of iterations of the search algorithm. The more iterations, <br>the more optimal values will be obtained as a result, but it also requires more time for calculation. <br>The optimal value of this parameter depends on the chosen time and your computer power.',
         saveResultsTooltip: 'The number of best results to be displayed in the resulting table.',

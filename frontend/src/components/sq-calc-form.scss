@@ -5,6 +5,7 @@
     .form {
         display: flex;
         justify-content: space-between;
+        margin-bottom: 16px;
         .main-fields {
             margin-left: 20px;
         }
@@ -13,7 +14,7 @@
             border-left: 0.5px solid $grey;
         }
         .level {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             .title {
                 display: block;
                 font-size: 18px;
@@ -21,7 +22,7 @@
                 margin-left: 60px;
             }
             .el-form-item {
-                margin-bottom: 16px;
+                margin-bottom: 12px;
             }
             .el-input {
                 width: 180px;
@@ -60,6 +61,13 @@
                         left: -24px;
                     }
                 }
+                .text {
+                    color: $grey;
+                    position: absolute;
+                    top: 2px;
+                    left: 126px;
+                    width: 120px;
+                }
             }
             .separator {
                 position: relative;
@@ -74,8 +82,7 @@
         }
     }
     .btn-block {
-        margin-left: 200px;
-        margin-bottom: 16px;
+        margin-top: 24px;
         .el-button {
             width: 120px;
         }
@@ -94,4 +101,9 @@
             font-size: 18px;
         }
     }
+}
+
+.el-dialog__body .text {
+    position: relative;
+    bottom: 20px;
 }
