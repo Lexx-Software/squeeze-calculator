@@ -42,70 +42,23 @@ const klinesCache = {
     tickers: undefined
 }
 
-export async function calculateData(formData: any, cb): Promise<any> {
+export async function calculateData(formData: any, settings: ISqueezeOptimizationsParameters,  cb): Promise<any> {
     const symbol = formData.symbol.toUpperCase();
     const from = new Date(formData.time[0]).getTime()
     const to = new Date(formData.time[1]).getTime()
     const commissionPercent = formData.fee;
     const saveResults = formData.saveResults;
-    const binding = [];
-    for (const key of Object.keys(formData.binding)) {
-        if (formData.binding[key] === true) {
-            binding.push(key);
-        }
-    }
-    const settings: ISqueezeOptimizationsParameters = {
-        percentBuy: {
-            from: formData.percentBuyFrom,
-            to: formData.percentBuyTo,
-        },
-        percentSell: {
-            from: formData.percentSellFrom,
-            to: formData.percentSellTo,
-        },
-        binding,
-        algorithm: formData.algorithm,
-        iterations: formData.iterations
-    }
-    if (formData.stopLossTime.isActive) {
-        settings.stopLossTime = {
-            from: formData.stopLossTime.from,
-            to: formData.stopLossTime.to,
-        }
-    }
-    if (formData.stopLossPercent.isActive) {
-        settings.stopLossPercent = {
-            from: formData.stopLossPercent.from,
-            to: formData.stopLossPercent.to,
-        }
-    }
-    if (formData.stopLossPercent.isActive) {
-        settings.stopOnKlineClosed = formData.stopOnKlineClosed;
-    }
-    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
-        settings.filters = {};
-        if (formData.minNumDeals.isActive) {
-            settings.filters.minNumDeals = formData.minNumDeals.value;
-        }
-        if (formData.minCoeff.isActive) {
-            settings.filters.minCoeff = formData.minCoeff.value;
-        }
-        if (formData.minWinRate.isActive) {
-            settings.filters.minWinRate = formData.minWinRate.value;
-        }
-        if (formData.maxSellBuyRatio.isActive) {
-            settings.filters.maxSellBuyRatio = formData.maxSellBuyRatio.value;
-        }
-    }
     
     const progressBar = new ProgressBar(cb);
 
+    const klinesTimeFrame = formData.downloadTimeFrame;
+
     cb({ startDownload: true })
 
-    const klinesCacheName = `${formData.exchange}_${symbol}_${from}_${to}`;
+    const klinesCacheName = `${formData.exchange}_${symbol}_${klinesTimeFrame}_${from}_${to}`;
     if (klinesCache.name !== klinesCacheName) {
         const exchange = new BinanceExchange(formData.exchange);
-        klinesCache.klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
+        klinesCache.klines = await exchange.downloadKlines(symbol, klinesTimeFrame, from, to, progressBar);
         klinesCache.tickers = await exchange.getSymbolsTickers();
         klinesCache.name = klinesCacheName;
     }
@@ -118,7 +71,14 @@ export async function calculateData(formData: any, cb): Promise<any> {
 
     await sleep(1);
 
-    const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, settings, progressBar, saveResults);
+    (window as any).gtag('event', "on_calculate", {
+        exchange: formData.exchange,
+        symbol: symbol,
+        timeframe: settings.timeFrame,
+        period: (to - from) / (24 * 60 * 60 * 1000)
+    })
+
+    const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, klinesTimeFrame, settings, progressBar, saveResults);
     await finder.findBestSqueeze();
 
     cb({ calculateTime: progressBar.getSpentSeconds().toFixed(3) })

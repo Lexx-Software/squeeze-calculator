@@ -8,14 +8,15 @@ export default {
     },
     validation: {
         inputValue: 'Input value',
-        lessThanPrev: 'Less than previous'
+        lessThanPrev: 'Less than previous',
+        moreThanSqueezeTimeframe: 'More than "Squeeze timeframe"'
     },
     main: {
         dataSettings: 'Data settings',
         exchange: 'Exchange',
         fee: 'Trading fee',
         symbol: 'Symbol',
-        timeframe: 'Timeframe',
+        timeframe: 'Squeeze timeframe',
         time: 'Time',
         from: 'From',
         to: 'To',
@@ -32,6 +33,7 @@ export default {
         stopLossTime: 'Timeout stoploss (minutes)',
         stopLossPercent: 'Price stoploss (percent)',
         stopOnKlineClosed: 'Stop on closing one-min candle',
+        oncePerCandle: 'Once per Candle',
         filters: 'Filters (experimental)',
         minNumDeals: 'Minimum number of deals',
         minCoeff: 'Minimum profit/loss coeff',
@@ -41,6 +43,7 @@ export default {
         algorithm: 'Algorithm',
         iterations: 'Iterations',
         saveResults: 'Save result',
+        downloadTimeFrame: 'TimeFrame to download',
         start: 'Start',
         reset: 'Reset',
         results: 'Results for {exchange}, {symbol}, {timeframe}',
@@ -48,9 +51,11 @@ export default {
         downloadedIn: 'Downloaded in {value} seconds',
         calculating: 'Calculating',
         calculatedIn: 'Calculated in {value} seconds',
-        algorithmTooltip: '● random - search randomly<br>● OMG - search in the vicinity of the previously found optimal solution',
+        max: 'Max.',
+        algorithmTooltip: '● GRID - search by grid<br>● random - search randomly<br>● OMG - search in the vicinity of the previously found optimal solution',
         iterationsTooltip: 'The number of iterations of the search algorithm. The more iterations, <br>the more optimal values will be obtained as a result, but it also requires more time for calculation. <br>The optimal value of this parameter depends on the chosen time and your computer power.',
         saveResultsTooltip: 'The number of best results to be displayed in the resulting table.',
+        downloadTimeFrameTooltip: 'Candles of this specific timeframe will be downloaded from the exchange, <br>and the backtest calculation will be based on them. The finer the timeframe, <br>the more accurate the results, but the more time is required for the calculation.',
         table: {
             binding: 'Binding',
             percentBuy: 'Buy %',

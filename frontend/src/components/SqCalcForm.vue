@@ -46,11 +46,6 @@
                   clearable
                 />
               </el-form-item>
-
-              
-              <el-form-item class="right-item" :label="`${$t('main.timeframe')}:`">
-                <el-input class="short-input" v-model="calcForm.timeframe" :disabled="true" />
-              </el-form-item>
             </div>
 
             <div class="block">
@@ -75,6 +70,33 @@
             </span>
 
             <div class="block">
+              <el-form-item :label="`${$t('main.timeframe')}:`">
+                <el-select v-model="calcForm.timeframe"  @change="onChangeTimeframe">
+                    <el-option :label="'1m'" :value="'1m'"/>
+                    <el-option :label="'3m'" :value="'3m'"/>
+                    <el-option :label="'5m'" :value="'5m'"/>
+                    <el-option :label="'15m'" :value="'15m'"/>
+                    <el-option :label="'30m'" :value="'30m'"/>
+                    <el-option :label="'1h'" :value="'1h'"/>
+                    <el-option :label="'2h'" :value="'2h'"/>
+                    <el-option :label="'4h'" :value="'4h'"/>
+                    <el-option :label="'6h'" :value="'6h'"/>
+                    <el-option :label="'8h'" :value="'8h'"/>
+                    <el-option :label="'12h'" :value="'12h'"/>
+                    <el-option :label="'1d'" :value="'1d'"/>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item class="right-item" label="">
+                <el-checkbox
+                  v-model="calcForm.oncePerCandle"
+                  :label="$t('main.oncePerCandle')"
+                  :disabled="calcForm.timeframe === calcForm.downloadTimeFrame"
+                />
+              </el-form-item>
+            </div>
+
+            <div class="block">
               <el-form-item :label="`${$t('main.binding')}:`">
                 <el-checkbox v-model="calcForm.binding[SqueezeBindings.LOW]" :label="$t('main.low')" />
                 <el-checkbox v-model="calcForm.binding[SqueezeBindings.HIGH]" :label="$t('main.high')" />
@@ -87,21 +109,21 @@
 
             <div class="block">
               <el-form-item :label="`${$t('main.percentBuy')}:`" prop="percentBuyFrom">
-                <el-input-number v-model="calcForm.percentBuyFrom" :precision="1" :step="0.1" :min="0.5" />
+                <el-input-number v-model="calcForm.percentBuyFrom" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
               <el-form-item prop="percentBuyTo">
-                <el-input-number v-model="calcForm.percentBuyTo" :precision="1" :step="0.1" :min="0.5" />
+                <el-input-number v-model="calcForm.percentBuyTo" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
               </el-form-item>
             </div>
 
             <div class="block">
               <el-form-item :label="`${$t('main.percentSell')}:`" prop="percentSellFrom">
-                <el-input-number v-model="calcForm.percentSellFrom" :precision="1" :step="0.1" :min="0.5" />
+                <el-input-number v-model="calcForm.percentSellFrom" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
               <el-form-item prop="percentSellTo">
-                <el-input-number v-model="calcForm.percentSellTo" :precision="1" :step="0.1" :min="0.5" />
+                <el-input-number v-model="calcForm.percentSellTo" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
               </el-form-item>
             </div>
 
@@ -234,6 +256,10 @@
                 </el-tooltip>
                 <el-select v-model="calcForm.algorithm">
                     <el-option
+                        :label="OptimizationAlgorithm.GRID"
+                        :value="OptimizationAlgorithm.GRID"
+                    />
+                    <el-option
                         :label="OptimizationAlgorithm.OMG"
                         :value="OptimizationAlgorithm.OMG"
                     />
@@ -254,6 +280,7 @@
                   <img class="icon" src="../assets/img/info.svg" alt="/">
                 </el-tooltip>
                 <el-input-number v-model="calcForm.iterations" :min="0" />
+                <span class="text">{{ totalNumberVariants }}</span>
               </el-form-item>
             </div>
 
@@ -265,17 +292,38 @@
                 <el-input-number v-model="calcForm.saveResults" :min="0" />
               </el-form-item>
             </div>
+
+            <div class="block">
+              <el-form-item class="is-tooltip"  :label="`${$t('main.downloadTimeFrame')}:`" prop="downloadTimeFrame">
+                <el-tooltip placement="bottom" effect="light">
+                  <template #content>
+                    <span v-html="$t('main.downloadTimeFrameTooltip')" />
+                  </template>
+                  <img class="icon" src="../assets/img/info.svg" alt="/">
+                </el-tooltip>
+                <el-select v-model="calcForm.downloadTimeFrame" @change="onChangeDownloadTimeframe">
+                    <el-option :label="'1m'" :value="'1m'"/>
+                    <el-option :label="'3m'" :value="'3m'"/>
+                    <el-option :label="'5m'" :value="'5m'"/>
+                    <el-option :label="'15m'" :value="'15m'"/>
+                    <el-option :label="'30m'" :value="'30m'"/>
+                    <el-option :label="'1h'" :value="'1h'"/>
+                    <el-option :label="'2h'" :value="'2h'"/>
+                    <el-option :label="'4h'" :value="'4h'"/>
+                </el-select>
+              </el-form-item>
+            </div>
+
+            <!-- BUTTON -->
+            <div class="btn-block">
+              <el-button size="big" type="success" @click="submitForm" :disabled="loading">
+                {{ $t('main.start') }}
+              </el-button>
+              <el-button size="big" @click="clearForm">{{ $t('main.reset') }}</el-button>
+            </div>
           </div>
         </div>
       </el-form>
-
-      <!-- BUTTON -->
-      <div class="btn-block">
-        <el-button type="success" @click="submitForm" :disabled="loading">
-          {{ $t('main.start') }}
-        </el-button>
-        <el-button @click="clearForm">{{ $t('main.reset') }}</el-button>
-      </div>
     </el-config-provider>
 
     <!-- PROGRESS -->
@@ -340,7 +388,7 @@
                 <el-button
                     type="primary"
                     link
-                    @click="openDealsModal(scope.row.deals)"
+                    @click="openDealsModal(scope.row)"
                 >
                   {{ scope.row.totalDeals || '-' }}
                 </el-button>
@@ -388,6 +436,7 @@
       width="80%"
       @close="handleCloseDealsModal"
     >
+      <span class="text">{{ dealsText }}</span>
       <el-table class="table" :data="dealsTableData">
         <el-table-column :label="$t('main.deals.timeBuy')">
             <template #default="scope">
@@ -442,8 +491,15 @@ import { Vue } from 'vue-class-component';
 import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
-import { EXCHANGE, EXCHANGE_TEXT } from '../enum';
-import { OptimizationAlgorithm, SqueezeBindings, BinanceExchange } from 'squeeze-utils';
+import { EXCHANGE, EXCHANGE_TEXT, TIMEFRAME_PERC_SETTINGS } from '../enum';
+import {
+  OptimizationAlgorithm,
+  SqueezeBindings,
+  BinanceExchange,
+  TimeFrameSeconds,
+  BestSqueezeFinder,
+  ISqueezeOptimizationsParameters,
+} from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 
@@ -483,6 +539,7 @@ export default class SqCalcForm extends Vue {
       from: 1,
       to: 10,
     },
+    oncePerCandle: true,
     stopOnKlineClosed: true,
     minNumDeals: {
       isActive: false,
@@ -500,7 +557,8 @@ export default class SqCalcForm extends Vue {
       isActive: false,
       value: 0.5,
     },
-    algorithm: OptimizationAlgorithm.OMG,
+    algorithm: OptimizationAlgorithm.RANDOM,
+    downloadTimeFrame: '1m',
     iterations: 1000,
     saveResults: 20,
   };
@@ -534,6 +592,18 @@ export default class SqCalcForm extends Vue {
         }
       },
       trigger: ['blur', 'change']
+    }],
+    downloadTimeFrame: [{
+      validator: (rule, value, callback): void => {
+        if (!value) {
+            callback(new Error(t('validation.inputValue')));
+        } else if (TimeFrameSeconds[value] > TimeFrameSeconds[this.calcForm.timeframe]) {
+            callback(new Error(t('validation.moreThanSqueezeTimeframe')));
+        } else {
+            callback();
+        }
+      },
+      trigger: ['blur', 'change'],
     }]
   }
 
@@ -578,7 +648,7 @@ export default class SqCalcForm extends Vue {
       // @ts-ignore
       await this.checkFormValid(this.$refs.calcFormRef);
 
-      const result = await calculateData(this.calcForm, this.setDownloadText);
+      const result = await calculateData(this.calcForm, this.squeezeOptimizationsParameters, this.setDownloadText);
 
       this.setTableData(result);
 
@@ -606,6 +676,93 @@ export default class SqCalcForm extends Vue {
             throw errMsg;
         }
     });
+  }
+
+  get squeezeOptimizationsParameters() {
+    const formData = this.calcForm;
+    const binding = [];
+    for (const key of Object.keys(formData.binding)) {
+        if (formData.binding[key] === true) {
+            binding.push(key);
+        }
+    }
+    const settings: ISqueezeOptimizationsParameters = {
+        percentBuy: {
+            from: formData.percentBuyFrom,
+            to: formData.percentBuyTo,
+        },
+        percentSell: {
+            from: formData.percentSellFrom,
+            to: formData.percentSellTo,
+        },
+        timeFrame: formData.timeframe,
+        oncePerCandle: formData.oncePerCandle,
+        binding,
+        algorithm: formData.algorithm,
+        iterations: formData.iterations
+    }
+    if (formData.stopLossTime.isActive) {
+        settings.stopLossTime = {
+            from: formData.stopLossTime.from,
+            to: formData.stopLossTime.to,
+        }
+    }
+    if (formData.stopLossPercent.isActive) {
+        settings.stopLossPercent = {
+            from: formData.stopLossPercent.from,
+            to: formData.stopLossPercent.to,
+        }
+    }
+    if (formData.stopLossPercent.isActive) {
+        settings.stopOnKlineClosed = formData.stopOnKlineClosed;
+    }
+    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
+        settings.filters = {};
+        if (formData.minNumDeals.isActive) {
+            settings.filters.minNumDeals = formData.minNumDeals.value;
+        }
+        if (formData.minCoeff.isActive) {
+            settings.filters.minCoeff = formData.minCoeff.value;
+        }
+        if (formData.minWinRate.isActive) {
+            settings.filters.minWinRate = formData.minWinRate.value;
+        }
+        if (formData.maxSellBuyRatio.isActive) {
+            settings.filters.maxSellBuyRatio = formData.maxSellBuyRatio.value;
+        }
+    }
+    return settings;
+  }
+
+  // Total possible variants
+
+  get totalNumberVariants() {
+    const result = BestSqueezeFinder.totalNumberVariants(this.squeezeOptimizationsParameters)
+    return result && result > 0 ? `${t('main.max')}: ${result}` : '';
+  }
+
+  // Set buy sell percent from fimeframe
+
+  isPercentBuySellWasManuallySet = false;
+
+  onChangeTimeframe() {
+    if (this.calcForm.timeframe === this.calcForm.downloadTimeFrame) {
+      this.calcForm.oncePerCandle = true;
+    }
+    if (this.isPercentBuySellWasManuallySet) {
+      return;
+    }
+    const data = TIMEFRAME_PERC_SETTINGS[this.calcForm.timeframe];
+    this.calcForm.percentBuyFrom = data.buy.from;
+    this.calcForm.percentBuyTo = data.buy.to;
+    this.calcForm.percentSellFrom = data.sell.from;
+    this.calcForm.percentSellTo = data.sell.to;
+  }
+
+  onChangeDownloadTimeframe() {
+    if (this.calcForm.timeframe === this.calcForm.downloadTimeFrame) {
+      this.calcForm.oncePerCandle = true;
+    }
   }
 
   // Search symbol
@@ -647,13 +804,15 @@ export default class SqCalcForm extends Vue {
           binding: item.settings.binding,
           percentBuy: item.settings.percentBuy,
           percentSell: item.settings.percentSell,
-          stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : undefined,
+          stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : 0,
           stopLossPercent: item.settings.stopLossPercent,
+          timeFrame: item.settings.timeFrame,
+          oncePerCandle: item.settings.oncePerCandle,
           totalDeals: item.totalDeals,
           deals: item.deals,
-          totalProfitPercent: item.totalProfitPercent ? item.totalProfitPercent.toFixed(2) : undefined,
-          coeff: item.coeff ? item.coeff.toFixed(2) : undefined,
-          winrate: item.winRate ? item.winRate.toFixed(2) : undefined,
+          totalProfitPercent: item.totalProfitPercent ? Number(item.totalProfitPercent.toFixed(2)) : 0,
+          coeff: item.coeff ? Number(item.coeff.toFixed(2)) : 0,
+          winrate: item.winRate ? Number(item.winRate.toFixed(2)) : 0,
           symbol: data.symbol,
           exchange: data.exchange,
           stopOnKlineClosed: data.stopOnKlineClosed,
@@ -683,12 +842,21 @@ export default class SqCalcForm extends Vue {
     const cookiesObj = this.getCookiesObj();
     const subDomain = cookiesObj.subDomain ? `${cookiesObj.subDomain}.`: '';
 
-    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tf=1m&tu=1`;
+    (window as any).gtag('event', "on_create_strategy", {
+        exchange: data.exchange,
+        symbol: data.symbol,
+        timeframe: data.timeFrame
+    });
 
+    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tu=1`;
+    // time frame
+    link += `&tf=${data.timeFrame}`;
     // binding
     link += `&bi=${this.getBindingForLink(data.binding)}`;
     // buy/sell trigger
     link += `&bt=${data.percentBuy}&st=${data.percentSell}`;
+    // Once per candle
+    link += `&oc=${data.oncePerCandle ? 1 : 0}`;
     // sl time
     if (data.stopLossTime) {
       link += `&slt=1&sltv=${data.stopLossTime}`;
@@ -717,10 +885,18 @@ export default class SqCalcForm extends Vue {
 
   dealsModalVisible = false
   dealsTableData = [];
+  dealsText = '';
 
-  openDealsModal(deals) {
-    this.dealsTableData = deals;
-    this.dealsModalVisible = true
+  openDealsModal(row) {
+    this.dealsTableData = row.deals;
+    this.dealsModalVisible = true;
+    this.dealsText = `
+      ${t('main.symbol')}: ${EXCHANGE_TEXT[row.exchange]} ${row.symbol}, 
+      ${t('main.table.percentBuy')}: ${row.percentBuy}, ${t('main.table.percentSell')}: ${row.percentSell}, ${t('main.binding')}: ${row.binding},
+      ${t('main.timeframe')}: ${row.timeFrame}, ${t('main.deals.stopLoss')}: ${row.stopLossPercent || '- '}% / ${row.stopLossTime}m, 
+      ${t('main.deals.profitPercent')}: ${row.totalProfitPercent}%,
+      ${t('main.table.coeff')}: ${row.coeff ? `${row.coeff}%` : '- '}, ${t('main.table.winrate')}: ${row.winrate}.
+    `;
   }
 
   getDealTime(value) {
@@ -750,6 +926,7 @@ export default class SqCalcForm extends Vue {
     this.tableData = [];
     this.resultsCount = 0;
     this.resultsText = '';
+    this.isPercentBuySellWasManuallySet = false;
 
     this.calcForm = {
       exchange: EXCHANGE.BINANCE,
@@ -779,6 +956,7 @@ export default class SqCalcForm extends Vue {
         from: 1,
         to: 10,
       },
+      oncePerCandle: true,
       stopOnKlineClosed: true,
       minNumDeals: {
         isActive: false,
@@ -796,8 +974,9 @@ export default class SqCalcForm extends Vue {
         isActive: false,
         value: 0.5,
       },
-      algorithm: OptimizationAlgorithm.OMG,
-      iterations: 100,
+      algorithm: OptimizationAlgorithm.RANDOM,
+      downloadTimeFrame: '1m',
+      iterations: 1000,
       saveResults: 20,
     };
     // @ts-ignore

@@ -4,3 +4,4 @@ export * from './squeezeCalculator';
 export * from './types';
 export * from './utils';
 export * from './exchanges/binanceExchange';
+export * from './optimization';
