@@ -42,63 +42,12 @@ const klinesCache = {
     tickers: undefined
 }
 
-export async function calculateData(formData: any, cb): Promise<any> {
+export async function calculateData(formData: any, settings: ISqueezeOptimizationsParameters,  cb): Promise<any> {
     const symbol = formData.symbol.toUpperCase();
     const from = new Date(formData.time[0]).getTime()
     const to = new Date(formData.time[1]).getTime()
     const commissionPercent = formData.fee;
     const saveResults = formData.saveResults;
-    const binding = [];
-    for (const key of Object.keys(formData.binding)) {
-        if (formData.binding[key] === true) {
-            binding.push(key);
-        }
-    }
-    const settings: ISqueezeOptimizationsParameters = {
-        percentBuy: {
-            from: formData.percentBuyFrom,
-            to: formData.percentBuyTo,
-        },
-        percentSell: {
-            from: formData.percentSellFrom,
-            to: formData.percentSellTo,
-        },
-        timeFrame: formData.timeframe,
-        oncePerCandle: formData.oncePerCandle,
-        binding,
-        algorithm: formData.algorithm,
-        iterations: formData.iterations
-    }
-    if (formData.stopLossTime.isActive) {
-        settings.stopLossTime = {
-            from: formData.stopLossTime.from,
-            to: formData.stopLossTime.to,
-        }
-    }
-    if (formData.stopLossPercent.isActive) {
-        settings.stopLossPercent = {
-            from: formData.stopLossPercent.from,
-            to: formData.stopLossPercent.to,
-        }
-    }
-    if (formData.stopLossPercent.isActive) {
-        settings.stopOnKlineClosed = formData.stopOnKlineClosed;
-    }
-    if (formData.minNumDeals.isActive || formData.minCoeff.isActive || formData.minWinRate.isActive || formData.maxSellBuyRatio.isActive) {
-        settings.filters = {};
-        if (formData.minNumDeals.isActive) {
-            settings.filters.minNumDeals = formData.minNumDeals.value;
-        }
-        if (formData.minCoeff.isActive) {
-            settings.filters.minCoeff = formData.minCoeff.value;
-        }
-        if (formData.minWinRate.isActive) {
-            settings.filters.minWinRate = formData.minWinRate.value;
-        }
-        if (formData.maxSellBuyRatio.isActive) {
-            settings.filters.maxSellBuyRatio = formData.maxSellBuyRatio.value;
-        }
-    }
     
     const progressBar = new ProgressBar(cb);
 
