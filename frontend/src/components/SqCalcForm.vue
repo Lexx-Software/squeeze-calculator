@@ -91,7 +91,6 @@
                 <el-checkbox
                   v-model="calcForm.oncePerCandle"
                   :label="$t('main.oncePerCandle')"
-                  :disabled="calcForm.timeframe === calcForm.downloadTimeFrame"
                 />
               </el-form-item>
             </div>
@@ -539,7 +538,7 @@ export default class SqCalcForm extends Vue {
       from: 1,
       to: 10,
     },
-    oncePerCandle: true,
+    oncePerCandle: false,
     stopOnKlineClosed: true,
     minNumDeals: {
       isActive: false,
@@ -746,9 +745,6 @@ export default class SqCalcForm extends Vue {
   isPercentBuySellWasManuallySet = false;
 
   onChangeTimeframe() {
-    if (this.calcForm.timeframe === this.calcForm.downloadTimeFrame) {
-      this.calcForm.oncePerCandle = true;
-    }
     if (this.isPercentBuySellWasManuallySet) {
       return;
     }
@@ -760,9 +756,6 @@ export default class SqCalcForm extends Vue {
   }
 
   onChangeDownloadTimeframe() {
-    if (this.calcForm.timeframe === this.calcForm.downloadTimeFrame) {
-      this.calcForm.oncePerCandle = true;
-    }
   }
 
   // Search symbol
@@ -956,7 +949,7 @@ export default class SqCalcForm extends Vue {
         from: 1,
         to: 10,
       },
-      oncePerCandle: true,
+      oncePerCandle: false,
       stopOnKlineClosed: true,
       minNumDeals: {
         isActive: false,
