@@ -3,7 +3,7 @@
 Welcome to the Squeeze Bot Parameters Calculator and Optimizer repository! This project provides code for calculating squeeze bot parameters and optimizing them based on specified conditions. The repository is distributed under the Apache License 2.0.
 
 Squeeze trading bot is available on [Lexx Trading Platform](https://lexx-trade.com/?utm_source=github).
-The last version of Squeeze Calculator is deployed and available [here](https://squeeze-calculator.lexx-trade.com/).
+The latest version of Squeeze Calculator is deployed and available [here](https://squeeze-calculator.lexx-trade.com/).
 
 ## Overview
 
