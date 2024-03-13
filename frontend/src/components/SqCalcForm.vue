@@ -763,6 +763,8 @@ export default class SqCalcForm extends Vue {
   symbolsList = [];
 
   async getSymbols(exchange) {
+    this.calcForm.fee = exchange === EXCHANGE.BINANCE ? 0.075 : 0.02;
+    
     const exchangeData = new BinanceExchange(exchange);
     const tickers = await exchangeData.getSymbolsTickers();
     const result = [];
