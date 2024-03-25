@@ -864,6 +864,8 @@ export default class SqCalcForm extends Vue {
     if (data.stopOnKlineClosed) {
       link += '&slc=1';
     }
+    link += '&src=squeeze_calculator';
+
     window.open(link, '_blank');
   }
 
@@ -978,8 +980,45 @@ export default class SqCalcForm extends Vue {
     this.$refs.calcFormRef.resetFields();
   }
 
+  // GET & APPLY LINK DATA
+
+  checkLink() {
+    const linkData = window.location.search.replace('?', '');
+    const dataArr = linkData.split('&');
+    const dataObj: any = {};
+    for (const item of dataArr) {
+        const itemArr = item.split('=');
+        dataObj[itemArr[0]] = itemArr[1];
+    }
+    if (dataObj.s) {
+      const arr = dataObj.s.split(':');
+      this.calcForm.exchange = arr[0];
+      this.calcForm.symbol = arr[1];
+    }
+    if (dataObj.tf) {
+      this.calcForm.timeframe = this.getTimeFrame(dataObj.tf);
+    }
+  }
+
+  getTimeFrame(minutes) {
+    switch (Number(minutes)) {
+      case 1: return 'lm';
+      case 3: return '3m';
+      case 5: return '5m';
+      case 15: return '15m';
+      case 30: return '30m';
+      case 60: return '1h';
+      case 120: return '2h';
+      case 240: return '4h';
+      default: return '4h';
+    }
+  }
+
+  // - - -
+
   created() {
     this.getSymbols(this.calcForm.exchange)
+    this.checkLink();
   }
 }
 </script>
