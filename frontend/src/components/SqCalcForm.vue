@@ -997,7 +997,6 @@ export default class SqCalcForm extends Vue {
     }
     if (dataObj.tf) {
       this.calcForm.timeframe = this.getTimeFrame(dataObj.tf);
-      console.log('this.getTimeFrame(dataObj.tf)', this.getTimeFrame(dataObj.tf));
     }
   }
 
