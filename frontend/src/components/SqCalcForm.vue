@@ -1010,7 +1010,11 @@ export default class SqCalcForm extends Vue {
       case 60: return '1h';
       case 120: return '2h';
       case 240: return '4h';
-      default: return '4h';
+      case 360: return '6h';
+      case 480: return '8h';
+      case 720: return '12h';
+      case 1440: return '1d';
+      default: return '1d';
     }
   }
 
