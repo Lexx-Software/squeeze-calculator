@@ -1,4 +1,4 @@
-import { IKeyValueObject } from "./types";
+import { IKeyValueObject, IKline } from "./types";
 
 export const TimeFrameSeconds = {
     '1m' : 60 * 1000,
@@ -24,25 +24,6 @@ export function removeUndefined<T extends IKeyValueObject>(obj: T): T {
     return obj;
 }
 
-export function decimalAdjust(type, value, exp) {
-    // If the exp is undefined or zero...
-    if (typeof exp === 'undefined' || +exp === 0) {
-        return Math[type](value);
-    }
-    value = +value;
-    exp = +exp;
-    // If the value is not a number or the exp is not an integer...
-    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
-        return NaN;
-    }
-    // Shift
-    value = value.toString().split('e');
-    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
-    // Shift back
-    value = value.toString().split('e');
-    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
-}
-
 
 export function sortedArrayIndex<T>(array: T[], value: T, compareFunc: (a: T, b: T) => boolean = (a: T, b: T) => a < b): number {
     let low = 0;
@@ -57,4 +38,41 @@ export function sortedArrayIndex<T>(array: T[], value: T, compareFunc: (a: T, b:
         }
     }
     return low;
+}
+
+export function floorFloat(num: number, precision: number): number {
+    let str = `${num}`;
+    let idx = 0;
+    const strLen = str.length;
+    while (idx < strLen && str[idx] != '.') {
+        idx++
+    }
+
+    const len = idx + precision + 1
+    if (strLen > len) {
+        str = str.substring(0, len);
+    }
+
+    return parseFloat(str);
+}
+
+export function invertKlines(klines: IKline[]): IKline[] {
+    const result = [];
+    for (const kline of klines) {
+        result.push({
+            openTime: kline.openTime,
+            closeTime: kline.closeTime,
+            open: -kline.open,
+            close: -kline.close,
+            high: -kline.high,
+            low: -kline.low,
+            baseVolume: kline.baseVolume,
+            quoteVolume: kline.quoteVolume,
+            trades: kline.trades,
+            buyBaseVolume: kline.buyBaseVolume,
+            buyQuoteVolume: kline.buyQuoteVolume,
+            closed: kline.closed,
+        });
+    }
+    return result;
 }
