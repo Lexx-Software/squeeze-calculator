@@ -1,4 +1,4 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener } from 'squeeze-utils';
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener, IKline, ISqueezeDealsStatistic } from 'squeeze-utils';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -42,7 +42,18 @@ const klinesCache = {
     tickers: undefined
 }
 
-export async function calculateData(formData: any, settings: ISqueezeOptimizationsParameters,  cb): Promise<any> {
+export interface ICalculatedResult {
+    symbol: string;
+    exchange: string;
+    stopOnKlineClosed: boolean;
+    dataArr: ISqueezeDealsStatistic[];
+    klines: IKline[];
+    klinesTimeFrame: string,
+    timeFrame: string,
+    ticker: number;
+}
+
+export async function calculateData(formData: any, settings: ISqueezeOptimizationsParameters,  cb): Promise<ICalculatedResult> {
     const symbol = formData.symbol.toUpperCase();
     const from = new Date(formData.time[0]).getTime()
     const to = new Date(formData.time[1]).getTime()
@@ -75,7 +86,7 @@ export async function calculateData(formData: any, settings: ISqueezeOptimizatio
         exchange: formData.exchange,
         symbol: symbol,
         timeframe: settings.timeFrame,
-        period: (to - from) / (24 * 60 * 60 * 1000)
+        period: (to - from) / (24 * 60 * 60 * 1000),
     })
 
     const finder = new BestSqueezeFinder(klinesCache.tickers[symbol], commissionPercent, klinesCache.klines, klinesTimeFrame, settings, progressBar, saveResults);
@@ -88,5 +99,9 @@ export async function calculateData(formData: any, settings: ISqueezeOptimizatio
         exchange: formData.exchange,
         stopOnKlineClosed: settings.stopOnKlineClosed || false,
         dataArr: finder.getAllAttemptsSqueezes(),
+        klines: klinesCache.klines,
+        klinesTimeFrame: klinesTimeFrame,
+        timeFrame: settings.timeFrame,
+        ticker: klinesCache.tickers[symbol]
     };
 }

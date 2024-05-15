@@ -322,10 +322,10 @@
 
             <!-- BUTTON -->
             <div class="btn-block">
-              <el-button size="big" type="success" @click="submitForm" :disabled="loading">
+              <el-button size="default" type="success" @click="submitForm" :disabled="loading">
                 {{ $t('main.start') }}
               </el-button>
-              <el-button size="big" @click="clearForm">{{ $t('main.reset') }}</el-button>
+              <el-button size="default" @click="clearForm">{{ $t('main.reset') }}</el-button>
             </div>
           </div>
         </div>
@@ -453,8 +453,11 @@
       :title="$t('main.deals.title')"
       width="80%"
       @close="handleCloseDealsModal"
+      @open="handleOpenDealsModal"
     >
       <span class="text">{{ dealsText }}</span>
+      <div ref="chartContainer"></div>
+
       <el-table class="table" :data="dealsTableData">
         <el-table-column :label="$t('main.deals.timeEnter')">
             <template #default="scope">
@@ -517,9 +520,36 @@ import {
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
+  ISqueezeDealsStatistic,
 } from 'squeeze-utils';
-import { calculateData } from './calculate';
+import { calculateData, ICalculatedResult } from './calculate';
 import i18n from '@/i18n';
+import {
+    ActionId,
+    ChartingLibraryFeatureset,
+    ChartingLibraryWidgetOptions,
+    DatafeedConfiguration,
+    EntityId,
+    ErrorCallback,
+    HistoryCallback,
+    IAction,
+    IActionVariant,
+    IBasicDataFeed,
+    IChartingLibraryWidget,
+    LibrarySymbolInfo,
+    OnReadyCallback,
+    PeriodParams,
+    ResolutionString,
+    ResolveCallback,
+    SearchSymbolsCallback,
+    ServerTimeCallback,
+    SubscribeBarsCallback,
+    TimeFrameValue,
+    widget,
+} from '../assets/charting_library';
+import {TimeFrameToTVResolution, TradingViewDataFeed} from './tradingViewDataFeed';
+import {TradingViewDealsDisplay} from './tradingViewDealDisplay';
+
 
 const { t } = i18n.global;
 
@@ -581,6 +611,9 @@ export default class SqCalcForm extends Vue {
     iterations: 1000,
     saveResults: 20,
   };
+
+  currentResult: ICalculatedResult
+  tvWidget: IChartingLibraryWidget | undefined;
 
   calcFormRules: FormRules = {
     symbol: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
@@ -644,7 +677,7 @@ export default class SqCalcForm extends Vue {
       this.downloadTimeText += `${t('main.calculatedIn', { value: data.calculateTime })}.`;
     }
     if (data.progress) {
-      this.downloadProgress = data.progress;
+      this.downloadProgress = parseFloat(data.progress);
     }
   }
 
@@ -670,6 +703,7 @@ export default class SqCalcForm extends Vue {
       const result = await calculateData(this.calcForm, this.squeezeOptimizationsParameters, this.setDownloadText);
 
       this.setTableData(result);
+      this.currentResult = result;
 
     } catch (err) {
       (this as any).$message({
@@ -812,11 +846,12 @@ export default class SqCalcForm extends Vue {
   resultsCount = 0;
   resultsText = '';
 
-  setTableData(data) {
+  setTableData(data: ICalculatedResult) {
     this.isShowTable = true;
     for (const item of data.dataArr || []) {
       this.resultsCount++
       this.tableData.push({
+          item: item,
           isShort: item.settings.isShort,
           binding: item.settings.binding,
           percentEnter: item.settings.percentEnter,
@@ -909,8 +944,11 @@ export default class SqCalcForm extends Vue {
   dealsModalVisible = false
   dealsTableData = [];
   dealsText = '';
+  dealsRowItem: ISqueezeDealsStatistic;
+  dialsDisplay: TradingViewDealsDisplay;
 
   openDealsModal(row) {
+    this.dealsRowItem = row.item;
     this.dealsTableData = row.deals;
     this.dealsModalVisible = true;
     this.dealsText = `
@@ -932,8 +970,29 @@ export default class SqCalcForm extends Vue {
     return `${day}.${month}.${year} ${hours}:${minutes}`;
   }
 
+  handleOpenDealsModal() {
+    const dataFeed = new TradingViewDataFeed(this.currentResult);
+
+    const widgetOptions: ChartingLibraryWidgetOptions = {
+      symbol: `${this.currentResult.exchange}:${this.currentResult.symbol}`,
+      interval: TimeFrameToTVResolution[this.currentResult.timeFrame] as ResolutionString,
+      fullscreen: true,
+      container: this.$refs.chartContainer as HTMLElement,
+      library_path: 'charting_library/',
+      locale: 'en',
+      datafeed: dataFeed,
+      theme: 'dark'
+    };
+
+    const tvWidget = new widget(widgetOptions);
+    this.tvWidget = tvWidget;
+
+    this.dialsDisplay = new TradingViewDealsDisplay(tvWidget, this.dealsRowItem, dataFeed);
+  }
+
   handleCloseDealsModal() {
     this.dealsTableData = [];
+    this.dialsDisplay.destroy();
   }
 
   // - - -
