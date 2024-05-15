@@ -264,6 +264,8 @@ export class SqueezeCalculator {
             if (d.profitPercent >= 0) {
                 result.numProfitDeals += 1;
                 sumTakes += d.profitPercent;
+            } else {
+                sumStops += d.profitPercent;
             }
 
             if (d.isTimeStopLoss || d.isTimeStopLoss) {
