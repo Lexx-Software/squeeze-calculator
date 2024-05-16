@@ -516,9 +516,9 @@
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.maxTimeInDealMins')">
+        <el-table-column :label="$t('main.table.time')">
             <template #default="scope">
-                {{ ((scope.row.timeExit - scope.row.timeEnter) / 60000).toFixed(2) || '-' }}
+                {{ ((scope.row.timeExit - scope.row.timeEnter) / 60000).toFixed(2) }}
             </template>
         </el-table-column>
       </el-table>
@@ -545,7 +545,7 @@ import {
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
-} from 'squeeze-utils';
+} from '../../../squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 

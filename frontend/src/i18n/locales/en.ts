@@ -32,7 +32,7 @@ export default {
         percentEnter: 'Percent enter',
         percentExit: 'Percent exit',
         stopLossTime: 'Timeout stoploss (minutes)',
-        stopLossPercent: 'Price stoploss (percent)',
+        stopLossPercent: 'Price stoploss (%)',
         stopOnKlineClosed: 'Stop on closing one-min candle',
         oncePerCandle: 'Once per Candle',
         filters: 'Filters (experimental)',
@@ -72,6 +72,7 @@ export default {
             maxDrawdownPercent: 'Max. drawdown',
             maxTimeInDealMins: 'Max. time',
             info: 'Info',
+            time: "Time",
             tooltip: {
                 maxDrawdownPercent: 'Maximum position drawdown during a trade',
                 maxTimeInDealMins: 'Maximum time in a trade (minutes)'

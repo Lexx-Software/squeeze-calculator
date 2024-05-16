@@ -32,7 +32,7 @@ export default {
         percentEnter: 'Процент входа',
         percentExit: 'Процент выхода',
         stopLossTime: 'Время стоплосса (минуты)',
-        stopLossPercent: 'Процент стоплосса (проценты)',
+        stopLossPercent: 'Процент стоплосса (%)',
         stopOnKlineClosed: 'Стоплосс по закрытию 1м. свечи',
         oncePerCandle: 'Одна отработка за свечу',
         filters: 'Фильтры (экспериментально)',
@@ -71,6 +71,7 @@ export default {
             create: 'Создать',
             maxDrawdownPercent: 'Макс. просадка',
             maxTimeInDealMins: 'Макс. время',
+            time: "Время",
             info: 'Инфо',
             tooltip: {
                 maxDrawdownPercent: 'Максимальная просадка позиции за время сделки',
