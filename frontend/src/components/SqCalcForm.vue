@@ -46,6 +46,13 @@
                   clearable
                 />
               </el-form-item>
+
+              <el-form-item class="right-item" :label="`${$t('main.direction')}:`" prop="direction">
+                <el-select class="short-select" v-model="calcForm.isShort">
+                    <el-option :label="'Long'" :value="false"/>
+                    <el-option :label="'Short'" :value="true"/>
+                </el-select>
+              </el-form-item>
             </div>
 
             <div class="block">
@@ -107,22 +114,22 @@
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.percentBuy')}:`" prop="percentBuyFrom">
-                <el-input-number v-model="calcForm.percentBuyFrom" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
+              <el-form-item :label="`${$t('main.percentEnter')}:`" prop="percentEnterFrom">
+                <el-input-number v-model="calcForm.percentEnterFrom" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
-              <el-form-item prop="percentBuyTo">
-                <el-input-number v-model="calcForm.percentBuyTo" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
+              <el-form-item prop="percentEnterTo">
+                <el-input-number v-model="calcForm.percentEnterTo" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
             </div>
 
             <div class="block">
-              <el-form-item :label="`${$t('main.percentSell')}:`" prop="percentSellFrom">
-                <el-input-number v-model="calcForm.percentSellFrom" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
+              <el-form-item :label="`${$t('main.percentExit')}:`" prop="percentExitFrom">
+                <el-input-number v-model="calcForm.percentExitFrom" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
-              <el-form-item prop="percentSellTo">
-                <el-input-number v-model="calcForm.percentSellTo" :precision="1" :step="0.1" :min="0.5" @change="isPercentBuySellWasManuallySet = true" />
+              <el-form-item prop="percentExitTo">
+                <el-input-number v-model="calcForm.percentExitTo" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
             </div>
 
@@ -354,19 +361,19 @@
       >
         <el-table-column :label="$t('main.table.binding')" prop="binding" :sortable="true">
             <template #default="scope">
-                {{ scope.row.binding || '-' }}
+                {{ getBindingText(scope.row.binding) || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.percentBuy')" prop="percentBuy" :sortable="true">
+        <el-table-column :label="$t('main.table.percentEnter')" prop="percentEnter" :sortable="true">
             <template #default="scope">
-                {{ scope.row.percentBuy || '-' }}
+                {{ scope.row.percentEnter || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.percentSell')" prop="percentSell" :sortable="true">
+        <el-table-column :label="$t('main.table.percentExit')" prop="percentExit" :sortable="true">
             <template #default="scope">
-                {{ scope.row.percentSell || '-' }}
+                {{ scope.row.percentExit || '-' }}
             </template>
         </el-table-column>
 
@@ -384,12 +391,8 @@
 
         <el-table-column :label="$t('main.table.totalDeals')" prop="totalDeals" :sortable="true">
             <template #default="scope">
-                <el-button
-                    type="primary"
-                    link
-                    @click="openDealsModal(scope.row)"
-                >
-                  {{ scope.row.totalDeals || '-' }}
+                <el-button type="primary" link @click="openDealsModal(scope.row)">
+                  {{ scope.row.totalDeals || '-' }} ({{ $t('main.table.info') }})
                 </el-button>
             </template>
         </el-table-column>
@@ -412,15 +415,47 @@
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.action')">
+        <el-table-column prop="maxDrawdownPercent" :sortable="true" :width="150">
+            <template #header>
+              <span>
+                {{ $t('main.table.maxDrawdownPercent') }}
+              </span>
+              <el-tooltip placement="bottom" effect="light">
+                <template #content>
+                  <span v-html="$t('main.table.tooltip.maxDrawdownPercent')" />
+                </template>
+                <img class="header-icon" src="../assets/img/info.svg" alt="/">
+              </el-tooltip>
+            </template>
+
+            <template #default="scope">
+                {{ scope.row.maxDrawdownPercent ? `${scope.row.maxDrawdownPercent}%` : '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column prop="maxTimeInDealMins" :sortable="true" :width="130">
+            <template #header>
+              <span>
+                {{ $t('main.table.maxTimeInDealMins') }}
+              </span>
+              <el-tooltip placement="bottom" effect="light">
+                <template #content>
+                  <span v-html="$t('main.table.tooltip.maxTimeInDealMins')" />
+                </template>
+                <img class="header-icon" src="../assets/img/info.svg" alt="/">
+              </el-tooltip>
+            </template>
+
+            <template #default="scope">
+                {{ scope.row.maxTimeInDealMins || '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.table.action')" align="right" :width="80">
             <template #default="scope">
                 {{ scope.row.action }}
-                <el-button
-                    type="primary"
-                    link
-                    @click="createStrategy(scope.row)"
-                >
-                  {{ $t('main.table.create') }}
+                <el-button type="primary" link @click="createStrategy(scope.row)">
+                    {{ $t('main.table.create') }}
                 </el-button>
             </template>
         </el-table-column>
@@ -437,27 +472,27 @@
     >
       <span class="text">{{ dealsText }}</span>
       <el-table class="table" :data="dealsTableData">
-        <el-table-column :label="$t('main.deals.timeBuy')">
+        <el-table-column :label="$t('main.deals.timeEnter')">
             <template #default="scope">
-                {{ getDealTime(scope.row.timeBuy) }}
+                {{ getDealTime(scope.row.timeEnter) }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.deals.timeSell')">
+        <el-table-column :label="$t('main.deals.timeExit')">
             <template #default="scope">
-                {{ getDealTime(scope.row.timeSell) }}
+                {{ getDealTime(scope.row.timeExit) }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.deals.priceBuy')">
+        <el-table-column :label="$t('main.deals.priceEnter')">
             <template #default="scope">
-                {{ scope.row.priceBuy || '-' }}
+                {{ scope.row.priceEnter || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.deals.priceSell')">
+        <el-table-column :label="$t('main.deals.priceExit')">
             <template #default="scope">
-                {{ scope.row.priceSell || '-' }}
+                {{ scope.row.priceExit || '-' }}
             </template>
         </el-table-column>
 
@@ -472,6 +507,18 @@
         <el-table-column :label="$t('main.deals.stopLoss')">
             <template #default="scope">
                 {{ scope.row.isTimeStopLoss ? $t('main.deals.byTime') : (scope.row.isPercentStopLoss ? $t('main.deals.byPercent') : '-') }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.table.maxDrawdownPercent')">
+            <template #default="scope">
+                {{ scope.row.drawdownPercent ? `${scope.row.drawdownPercent.toFixed(2)}%` : '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.table.time')">
+            <template #default="scope">
+                {{ ((scope.row.timeExit - scope.row.timeEnter) / 60000).toFixed(2) }}
             </template>
         </el-table-column>
       </el-table>
@@ -511,6 +558,7 @@ export default class SqCalcForm extends Vue {
   SqueezeBindings = SqueezeBindings;
 
   calcForm = {
+    isShort: false,
     exchange: EXCHANGE.BINANCE,
     fee: 0.075,
     symbol: 'BTCUSDT',
@@ -524,10 +572,10 @@ export default class SqCalcForm extends Vue {
       [SqueezeBindings.MID_HL]: false,
       [SqueezeBindings.MID_OC]: false,
     },
-    percentBuyFrom: 1,
-    percentBuyTo: 6,
-    percentSellFrom: 0.5,
-    percentSellTo: 3,
+    percentEnterFrom: 1,
+    percentEnterTo: 6,
+    percentExitFrom: 0.5,
+    percentExitTo: 3,
     stopLossTime: {
       isActive: true,
       from: 5,
@@ -566,12 +614,12 @@ export default class SqCalcForm extends Vue {
     symbol: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     fee: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
     time: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
-    percentBuyFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
-    percentBuyTo: [{
+    percentEnterFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    percentEnterTo: [{
       validator: (rule, value, callback): void => {
         if (!value) {
             callback(new Error(t('validation.inputValue')));
-        } else if (value < this.calcForm.percentBuyFrom) {
+        } else if (value < this.calcForm.percentEnterFrom) {
             callback(new Error(t('validation.lessThanPrev')));
         } else {
             callback();
@@ -579,12 +627,12 @@ export default class SqCalcForm extends Vue {
       },
       trigger: ['blur', 'change']
     }],
-    percentSellFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
-    percentSellTo: [{
+    percentExitFrom: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
+    percentExitTo: [{
       validator: (rule, value, callback): void => {
         if (!value) {
             callback(new Error(t('validation.inputValue')));
-        } else if (value < this.calcForm.percentSellFrom) {
+        } else if (value < this.calcForm.percentExitFrom) {
             callback(new Error(t('validation.lessThanPrev')));
         } else {
             callback();
@@ -686,13 +734,14 @@ export default class SqCalcForm extends Vue {
         }
     }
     const settings: ISqueezeOptimizationsParameters = {
-        percentBuy: {
-            from: formData.percentBuyFrom,
-            to: formData.percentBuyTo,
+        isShort: formData.isShort,
+        percentEnter: {
+            from: formData.percentEnterFrom,
+            to: formData.percentEnterTo,
         },
-        percentSell: {
-            from: formData.percentSellFrom,
-            to: formData.percentSellTo,
+        percentExit: {
+            from: formData.percentExitFrom,
+            to: formData.percentExitTo,
         },
         timeFrame: formData.timeframe,
         oncePerCandle: formData.oncePerCandle,
@@ -742,17 +791,17 @@ export default class SqCalcForm extends Vue {
 
   // Set buy sell percent from fimeframe
 
-  isPercentBuySellWasManuallySet = false;
+  ispercentEnterSellWasManuallySet = false;
 
   onChangeTimeframe() {
-    if (this.isPercentBuySellWasManuallySet) {
+    if (this.ispercentEnterSellWasManuallySet) {
       return;
     }
     const data = TIMEFRAME_PERC_SETTINGS[this.calcForm.timeframe];
-    this.calcForm.percentBuyFrom = data.buy.from;
-    this.calcForm.percentBuyTo = data.buy.to;
-    this.calcForm.percentSellFrom = data.sell.from;
-    this.calcForm.percentSellTo = data.sell.to;
+    this.calcForm.percentEnterFrom = data.buy.from;
+    this.calcForm.percentEnterTo = data.buy.to;
+    this.calcForm.percentExitFrom = data.sell.from;
+    this.calcForm.percentExitTo = data.sell.to;
   }
 
   onChangeDownloadTimeframe() {
@@ -796,9 +845,10 @@ export default class SqCalcForm extends Vue {
     for (const item of data.dataArr || []) {
       this.resultsCount++
       this.tableData.push({
+          isShort: item.settings.isShort,
           binding: item.settings.binding,
-          percentBuy: item.settings.percentBuy,
-          percentSell: item.settings.percentSell,
+          percentEnter: item.settings.percentEnter,
+          percentExit: item.settings.percentExit,
           stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : 0,
           stopLossPercent: item.settings.stopLossPercent,
           timeFrame: item.settings.timeFrame,
@@ -808,6 +858,8 @@ export default class SqCalcForm extends Vue {
           totalProfitPercent: item.totalProfitPercent ? Number(item.totalProfitPercent.toFixed(2)) : 0,
           coeff: item.coeff ? Number(item.coeff.toFixed(2)) : 0,
           winrate: item.winRate ? Number(item.winRate.toFixed(2)) : 0,
+          maxDrawdownPercent: Number(item.maxDrawdownPercent.toFixed(2)),
+          maxTimeInDealMins: Number(Math.round(item.maxTimeInDeal / 60000).toFixed(2)),
           symbol: data.symbol,
           exchange: data.exchange,
           stopOnKlineClosed: data.stopOnKlineClosed,
@@ -849,9 +901,11 @@ export default class SqCalcForm extends Vue {
     // binding
     link += `&bi=${this.getBindingForLink(data.binding)}`;
     // buy/sell trigger
-    link += `&bt=${data.percentBuy}&st=${data.percentSell}`;
+    link += `&bt=${data.percentEnter}&st=${data.percentExit}`;
     // Once per candle
     link += `&oc=${data.oncePerCandle ? 1 : 0}`;
+    // direction
+    link += `&d=${data.isShort ? 's' : 'l'}`;
     // sl time
     if (data.stopLossTime) {
       link += `&slt=1&sltv=${data.stopLossTime}`;
@@ -889,7 +943,7 @@ export default class SqCalcForm extends Vue {
     this.dealsModalVisible = true;
     this.dealsText = `
       ${t('main.symbol')}: ${EXCHANGE_TEXT[row.exchange]} ${row.symbol}, 
-      ${t('main.table.percentBuy')}: ${row.percentBuy}, ${t('main.table.percentSell')}: ${row.percentSell}, ${t('main.binding')}: ${row.binding},
+      ${t('main.table.percentEnter')}: ${row.percentEnter}, ${t('main.table.percentExit')}: ${row.percentExit}, ${t('main.binding')}: ${row.binding},
       ${t('main.timeframe')}: ${row.timeFrame}, ${t('main.deals.stopLoss')}: ${row.stopLossPercent || '- '}% / ${row.stopLossTime}m, 
       ${t('main.deals.profitPercent')}: ${row.totalProfitPercent}%,
       ${t('main.table.coeff')}: ${row.coeff ? `${row.coeff}%` : '- '}, ${t('main.table.winrate')}: ${row.winrate}.
@@ -923,9 +977,10 @@ export default class SqCalcForm extends Vue {
     this.tableData = [];
     this.resultsCount = 0;
     this.resultsText = '';
-    this.isPercentBuySellWasManuallySet = false;
+    this.ispercentEnterSellWasManuallySet = false;
 
     this.calcForm = {
+      isShort: false,
       exchange: EXCHANGE.BINANCE,
       fee: 0.075,
       symbol: 'BTCUSDT',
@@ -939,10 +994,10 @@ export default class SqCalcForm extends Vue {
         [SqueezeBindings.MID_HL]: false,
         [SqueezeBindings.MID_OC]: false,
       },
-      percentBuyFrom: 1,
-      percentBuyTo: 6,
-      percentSellFrom: 0.5,
-      percentSellTo: 3,
+      percentEnterFrom: 1,
+      percentEnterTo: 6,
+      percentExitFrom: 0.5,
+      percentExitTo: 3,
       stopLossTime: {
         isActive: true,
         from: 5,
@@ -1015,6 +1070,18 @@ export default class SqCalcForm extends Vue {
       case 720: return '12h';
       case 1440: return '1d';
       default: return '1d';
+    }
+  }
+
+  getBindingText(value) {
+    switch (value) {
+      case SqueezeBindings.LOW: return t('main.low');
+      case SqueezeBindings.HIGH: return t('main.high');
+      case SqueezeBindings.OPEN: return t('main.open');
+      case SqueezeBindings.CLOSE: return t('main.close');
+      case SqueezeBindings.MID_HL: return t('main.midHL');
+      case SqueezeBindings.MID_OC: return t('main.midOC');
+      default: return '';
     }
   }
 

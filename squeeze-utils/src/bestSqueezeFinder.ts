@@ -1,15 +1,16 @@
 import { IProgressListener } from "./iProgressListener";
 import { ISqueezeDealsStatistic, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "./squeezeCalculator";
 import { IKline } from "./types";
-import { sortedArrayIndex } from './utils';
+import { invertKlines, sortedArrayIndex } from './utils';
 import { BaseOptVar, CategoricalOptVar, ConstantOptVar, IntegerOptVar, OptimizationAlgorithm, OptimizersMap } from './optimization';
 
 export interface ISqueezeOptimizationsParameters {
-    percentBuy: {
+    isShort: boolean;
+    percentEnter: {
         from: number;
         to: number;
     };
-    percentSell: {
+    percentExit: {
         from: number;
         to: number;
     };
@@ -48,14 +49,16 @@ export class BestSqueezeFinder {
                 private _params: ISqueezeOptimizationsParameters,
                 private _progressBar?: IProgressListener,
                 private _numTopTries: number = 20) {
-        
+        if (this._params.isShort) {
+            this._klines = invertKlines(_klines);
+        }
     }
 
     private static _convertToDims(params: ISqueezeOptimizationsParameters): BaseOptVar[] {
         return [
-            new IntegerOptVar(params.percentBuy.from * PERCENT_ACCURACY, params.percentBuy.to * PERCENT_ACCURACY),    // percentBuy
-            new IntegerOptVar(params.percentSell.from * PERCENT_ACCURACY, params.percentSell.to * PERCENT_ACCURACY),  // percentSell
-            new CategoricalOptVar(params.binding),                                                                  // binding
+            new IntegerOptVar(params.percentEnter.from * PERCENT_ACCURACY, params.percentEnter.to * PERCENT_ACCURACY),      // percentEnter
+            new IntegerOptVar(params.percentExit.from * PERCENT_ACCURACY, params.percentExit.to * PERCENT_ACCURACY),        // percentExit
+            new CategoricalOptVar(params.binding),                                                                          // binding
             params.stopLossTime ? new IntegerOptVar(params.stopLossTime.from, params.stopLossTime.to) : new ConstantOptVar(undefined),           // stopLossTime
             params.stopLossPercent ? new IntegerOptVar(params.stopLossPercent.from * PERCENT_ACCURACY, params.stopLossPercent.to * PERCENT_ACCURACY) : new ConstantOptVar(undefined),  // stopLossPercent
         ];
@@ -80,8 +83,8 @@ export class BestSqueezeFinder {
         if (insertIdxLeft != insertIdxRight) {
             // there are several elements with such profit, so try to combine them if it makes sense
             for (let i = insertIdxLeft; i < insertIdxRight; i++) {
-                if (this._topIterations[i].settings.percentBuy != stat.settings.percentBuy 
-                    || this._topIterations[i].settings.percentSell != stat.settings.percentSell
+                if (this._topIterations[i].settings.percentEnter != stat.settings.percentEnter 
+                    || this._topIterations[i].settings.percentExit != stat.settings.percentExit
                     || this._topIterations[i].settings.binding != stat.settings.binding
                     || this._topIterations[i].settings.stopOnKlineClosed != stat.settings.stopOnKlineClosed ) {
                     continue;
@@ -130,8 +133,9 @@ export class BestSqueezeFinder {
 
     private async _squeezeOptimizationFunctionOptimjs(x: any[]): Promise<number> {
         const params: ISqueezeParameters = {
-            percentBuy: x[0] / PERCENT_ACCURACY,
-            percentSell: x[1] / PERCENT_ACCURACY,
+            isShort: this._params.isShort,
+            percentEnter: x[0] / PERCENT_ACCURACY,
+            percentExit: x[1] / PERCENT_ACCURACY,
             binding: x[2],
             stopLossTime: x[3] ? x[3] * 60 * 1000 : undefined,
             stopLossPercent: x[4] ? x[4] / PERCENT_ACCURACY : undefined,
@@ -142,7 +146,7 @@ export class BestSqueezeFinder {
         await this._progressBar?.onProgressUpdated(this._currentIteration++, this._params.iterations)
 
         // check maxSellBuyRatio
-        if (this._params.filters?.maxSellBuyRatio && (this._params.filters.maxSellBuyRatio + 0.1e-10) < params.percentSell / params.percentBuy) {
+        if (this._params.filters?.maxSellBuyRatio && (this._params.filters.maxSellBuyRatio + 0.1e-10) < params.percentExit / params.percentEnter) {
             return 0;
         }
 

@@ -10,6 +10,7 @@ export class KlineBuilder {
         this._kline = undefined;
         this._timeFrameMs = TimeFrameSeconds[tf];
         this._sourceTimeFrameMs = TimeFrameSeconds[sourceTf];
+
         for (const k of startKlines) {
             this.applyNewKline(k)
         }
@@ -37,15 +38,20 @@ export class KlineBuilder {
         if (!this._kline) {
             this._kline = { ...kline, closed: false };
         } else {
-            this._kline.closeTime = kline.closeTime,
-            this._kline.close = kline.close,
-            this._kline.high = Math.max(kline.high, this._kline.high),
-            this._kline.low = Math.min(kline.low, this._kline.low),
-            this._kline.baseVolume += kline.baseVolume,
-            this._kline.quoteVolume += kline.quoteVolume,
-            this._kline.trades += kline.trades,
-            this._kline.buyBaseVolume += kline.buyBaseVolume,
-            this._kline.buyQuoteVolume += kline.buyQuoteVolume
+            this._kline.closeTime = kline.closeTime;
+            this._kline.close = kline.close;
+            if (kline.open > 0) { // check klines are inverted
+                this._kline.high = Math.max(kline.high, this._kline.high);
+                this._kline.low = Math.min(kline.low, this._kline.low); 
+            } else {
+                this._kline.high = Math.min(kline.high, this._kline.high);
+                this._kline.low = Math.max(kline.low, this._kline.low); 
+            }
+            this._kline.baseVolume += kline.baseVolume;
+            this._kline.quoteVolume += kline.quoteVolume;
+            this._kline.trades += kline.trades;
+            this._kline.buyBaseVolume += kline.buyBaseVolume;
+            this._kline.buyQuoteVolume += kline.buyQuoteVolume;
         }
 
         if (this._isLastKline(kline)) {

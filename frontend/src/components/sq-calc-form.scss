@@ -47,7 +47,7 @@
                 .short-input {
                     width: 100px;
                 }
-                .short-select {
+                .short-select .el-input {
                     width: 100px;
                 }
                 .is-tooltip {
@@ -96,9 +96,24 @@
         }
     }
     .table-block {
-        margin-bottom: 60px;
         .title {
             font-size: 18px;
+        }
+        .el-table {
+            .cell {
+                padding: 0;
+                overflow: auto;
+                white-space: nowrap;
+            }
+            .sort-caret {
+                left: 4px;
+            }
+        }
+        .header-icon {
+            width: 14px;
+            margin-left: 2px;
+            position: relative;
+            top: 2px;
         }
     }
 }

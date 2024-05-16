@@ -1,5 +1,6 @@
 import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm, BinanceExchange,
-         IProgressListener, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "squeeze-utils";
+         IProgressListener, ISqueezeParameters, SqueezeBindings, SqueezeCalculator, 
+         invertKlines} from "squeeze-utils";
 
 class ProgressBar implements IProgressListener {
     private _startTime: number;
@@ -58,38 +59,43 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
 
     console.log('Starting downloading data...')
     const exchange = new BinanceExchange(exchangeName)
-    const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
+    let klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
 
+    if (params.isShort) {
+        klines = invertKlines(klines);
+    }
     const squeezeCalculator = new SqueezeCalculator(params, symbolsTickers[symbol], commissionPercent);
     const stat = squeezeCalculator.calculate(klines, '1m');
 
     console.log('Result:\n%s', JSON.stringify(stat, null, 2));
 }
 
-/*
+
 // Example how to get the statistic for special config
-calculateOne('binance', 'DATAUSDT', 1704063600000, 1704841200000, 0.075, {
-    percentBuy: 1.0,
-    percentSell: 0.5,
-    binding: SqueezeBindings.LOW,
-    stopLossTime: 24 * 60 * 1000,
+calculateOne('binance', 'BTCUSDT', 1714514400000, 1715205600000, 0.075, {
+    isShort: false,
+    percentEnter: 0.9,
+    percentExit: 1.1,
+    binding: SqueezeBindings.CLOSE,
+    stopLossTime: 6 * 60 * 1000,
     timeFrame: '1m',
     oncePerCandle: false
 });
-*/
 
-findBestSqueeze('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.075, {
-    percentBuy: {
+/*
+findBestSqueeze('BTCUSDT', Date.now() - 7 * 24 * 60 * 60 * 1000, undefined, 0.075, {
+    isShort: false,
+    percentEnter: {
         from: 1,
         to: 10
     },
-    percentSell: {
+    percentExit: {
         from: 0.5,
         to: 5
     },
-    binding: [SqueezeBindings.LOW, SqueezeBindings.CLOSE],
+    binding: [SqueezeBindings.CLOSE],
     stopLossTime: {
         from: 5,
         to: 60
@@ -101,9 +107,10 @@ findBestSqueeze('DATAUSDT', Date.now() - 30 * 24 * 60 * 60 * 1000, undefined, 0.
     timeFrame: '1h',
     oncePerCandle: true,
     stopOnKlineClosed: true,
-    algorithm: OptimizationAlgorithm.OMG,
+    algorithm: OptimizationAlgorithm.RANDOM,
     iterations: 1000,
     filters: {
-        minNumDeals: 10
+        //minNumDeals: 10
     }
 });
+*/

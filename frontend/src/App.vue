@@ -93,6 +93,7 @@ export default class App extends Vue {
 .footer {
   padding: 6px 0;
   text-align: center;
+  margin-top: 40px;
 
   .copyright, .text {
     font-size: 12px;
