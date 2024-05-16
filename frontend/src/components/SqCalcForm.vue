@@ -545,7 +545,7 @@ import {
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
-} from '../../../squeeze-utils';
+} from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 
