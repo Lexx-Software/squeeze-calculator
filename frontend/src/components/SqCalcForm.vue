@@ -451,7 +451,7 @@
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.action')" align="center" :width="80">
+        <el-table-column :label="$t('main.table.action')" align="right" :width="80">
             <template #default="scope">
                 {{ scope.row.action }}
                 <el-button type="primary" link @click="createStrategy(scope.row)">
@@ -545,7 +545,7 @@ import {
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
-} from '../../../squeeze-utils'; // @@@
+} from 'squeeze-utils';
 import { calculateData } from './calculate';
 import i18n from '@/i18n';
 

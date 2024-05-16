@@ -3,7 +3,7 @@ import {
     ISqueezeOptimizationsParameters,
     BinanceExchange,
     IProgressListener
-} from '../../../squeeze-utils'; // @@@
+} from 'squeeze-utils';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
