@@ -129,9 +129,6 @@ export class TradingViewDataFeed {
         onHistoryCallback: HistoryCallback,
         onErrorCallback: ErrorCallback
     ) {
-
-        console.log(`getBars(${resolution}) start`, periodParams.from);
-
         const from = periodParams.from * SEC_MS;
         const to = periodParams.to * SEC_MS;
 
@@ -170,8 +167,6 @@ export class TradingViewDataFeed {
         if (result.length > 0) {
             this.lastLoadedDataHistoryTime = result[0].time;
         }
-
-        console.log(`getBars(${resolution}):`, this.lastLoadedDataHistoryTime);
 
         onHistoryCallback(result, {
             noData: endIndex == 0
