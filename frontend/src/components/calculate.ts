@@ -1,4 +1,11 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, BinanceExchange, IProgressListener, IKline, ISqueezeDealsStatistic } from 'squeeze-utils';
+import {
+    BestSqueezeFinder,
+    ISqueezeOptimizationsParameters,
+    BinanceExchange,
+    IProgressListener,
+    IKline,
+    ISqueezeDealsStatistic
+} from 'squeeze-utils';
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
