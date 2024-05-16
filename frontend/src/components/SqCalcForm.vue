@@ -49,8 +49,8 @@
 
               <el-form-item class="right-item" :label="`${$t('main.direction')}:`" prop="direction">
                 <el-select class="short-select" v-model="calcForm.isShort">
-                    <el-option :label="'long'" :value="false"/>
-                    <el-option :label="'short'" :value="true"/>
+                    <el-option :label="'Long'" :value="false"/>
+                    <el-option :label="'Short'" :value="true"/>
                 </el-select>
               </el-form-item>
             </div>
@@ -361,7 +361,7 @@
       >
         <el-table-column :label="$t('main.table.binding')" prop="binding" :sortable="true">
             <template #default="scope">
-                {{ scope.row.binding || '-' }}
+                {{ getBindingText(scope.row.binding) || '-' }}
             </template>
         </el-table-column>
 
@@ -391,12 +391,8 @@
 
         <el-table-column :label="$t('main.table.totalDeals')" prop="totalDeals" :sortable="true">
             <template #default="scope">
-                <el-button
-                    type="primary"
-                    link
-                    @click="openDealsModal(scope.row)"
-                >
-                  {{ scope.row.totalDeals || '-' }}
+                <el-button type="primary" link @click="openDealsModal(scope.row)">
+                  {{ scope.row.totalDeals || '-' }} ({{ $t('main.table.info') }})
                 </el-button>
             </template>
         </el-table-column>
@@ -419,27 +415,47 @@
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.maxDrawdownPercent')" prop="maxDrawdownPercent" :sortable="true">
+        <el-table-column prop="maxDrawdownPercent" :sortable="true" :width="150">
+            <template #header>
+              <span>
+                {{ $t('main.table.maxDrawdownPercent') }}
+              </span>
+              <el-tooltip placement="bottom" effect="light">
+                <template #content>
+                  <span v-html="$t('main.table.tooltip.maxDrawdownPercent')" />
+                </template>
+                <img class="header-icon" src="../assets/img/info.svg" alt="/">
+              </el-tooltip>
+            </template>
+
             <template #default="scope">
                 {{ scope.row.maxDrawdownPercent ? `${scope.row.maxDrawdownPercent}%` : '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.maxTimeInDealMins')" prop="maxTimeInDealMins" :sortable="true">
+        <el-table-column prop="maxTimeInDealMins" :sortable="true" :width="130">
+            <template #header>
+              <span>
+                {{ $t('main.table.maxTimeInDealMins') }}
+              </span>
+              <el-tooltip placement="bottom" effect="light">
+                <template #content>
+                  <span v-html="$t('main.table.tooltip.maxTimeInDealMins')" />
+                </template>
+                <img class="header-icon" src="../assets/img/info.svg" alt="/">
+              </el-tooltip>
+            </template>
+
             <template #default="scope">
                 {{ scope.row.maxTimeInDealMins || '-' }}
             </template>
         </el-table-column>
 
-        <el-table-column :label="$t('main.table.action')">
+        <el-table-column :label="$t('main.table.action')" align="right" :width="80">
             <template #default="scope">
                 {{ scope.row.action }}
-                <el-button
-                    type="primary"
-                    link
-                    @click="createStrategy(scope.row)"
-                >
-                  {{ $t('main.table.create') }}
+                <el-button type="primary" link @click="createStrategy(scope.row)">
+                    {{ $t('main.table.create') }}
                 </el-button>
             </template>
         </el-table-column>
@@ -491,6 +507,18 @@
         <el-table-column :label="$t('main.deals.stopLoss')">
             <template #default="scope">
                 {{ scope.row.isTimeStopLoss ? $t('main.deals.byTime') : (scope.row.isPercentStopLoss ? $t('main.deals.byPercent') : '-') }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.table.maxDrawdownPercent')">
+            <template #default="scope">
+                {{ scope.row.drawdownPercent ? `${scope.row.drawdownPercent.toFixed(2)}%` : '-' }}
+            </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('main.table.time')">
+            <template #default="scope">
+                {{ ((scope.row.timeExit - scope.row.timeEnter) / 60000).toFixed(2) }}
             </template>
         </el-table-column>
       </el-table>
@@ -1042,6 +1070,18 @@ export default class SqCalcForm extends Vue {
       case 720: return '12h';
       case 1440: return '1d';
       default: return '1d';
+    }
+  }
+
+  getBindingText(value) {
+    switch (value) {
+      case SqueezeBindings.LOW: return t('main.low');
+      case SqueezeBindings.HIGH: return t('main.high');
+      case SqueezeBindings.OPEN: return t('main.open');
+      case SqueezeBindings.CLOSE: return t('main.close');
+      case SqueezeBindings.MID_HL: return t('main.midHL');
+      case SqueezeBindings.MID_OC: return t('main.midOC');
+      default: return '';
     }
   }
 
