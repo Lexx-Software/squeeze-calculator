@@ -23,12 +23,12 @@ export default {
         to: 'To',
         squeezeSearchArea: 'Squeeze search area',
         binding: 'Binding',
-        low: 'low',
-        high: 'high',
-        open: 'open',
-        close: 'close',
-        midOC: 'mid OC',
-        midHL: 'mid HL',
+        low: 'Low',
+        high: 'High',
+        open: 'Open',
+        close: 'Close',
+        midOC: 'Mid OC',
+        midHL: 'Mid HL',
         percentEnter: 'Percent enter',
         percentExit: 'Percent exit',
         stopLossTime: 'Timeout stoploss (minutes)',
@@ -44,7 +44,7 @@ export default {
         algorithm: 'Algorithm',
         iterations: 'Iterations',
         saveResults: 'Save result',
-        downloadTimeFrame: 'TimeFrame to download',
+        downloadTimeFrame: 'Time frame to download',
         start: 'Start',
         reset: 'Reset',
         results: 'Results for {exchange}, {symbol}, {timeframe}',
@@ -69,8 +69,13 @@ export default {
             winrate: 'Winrate',
             action: 'Action',
             create: 'Create',
-            maxDrawdownPercent: 'Drawdown',
-            maxTimeInDealMins: 'Time'
+            maxDrawdownPercent: 'Max. drawdown',
+            maxTimeInDealMins: 'Max. time',
+            info: 'Info',
+            tooltip: {
+                maxDrawdownPercent: 'Maximum position drawdown during a trade',
+                maxTimeInDealMins: 'Maximum time in a trade (minutes)'
+            }
         },
         deals: {
             close: 'Close',

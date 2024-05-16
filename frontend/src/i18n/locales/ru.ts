@@ -23,12 +23,12 @@ export default {
         to: 'До',
         squeezeSearchArea: 'Область поиска squeeze',
         binding: 'Привязка',
-        low: 'low',
-        high: 'high',
-        open: 'open',
-        close: 'close',
-        midOC: 'mid OC',
-        midHL: 'mid HL',
+        low: 'Low',
+        high: 'High',
+        open: 'Open',
+        close: 'Close',
+        midOC: 'Mid OC',
+        midHL: 'Mid HL',
         percentEnter: 'Процент входа',
         percentExit: 'Процент выхода',
         stopLossTime: 'Время стоплосса (минуты)',
@@ -44,7 +44,7 @@ export default {
         algorithm: 'Алгоритм',
         iterations: 'Итерации',
         saveResults: 'Сохранить результатов',
-        downloadTimeFrame: 'Таймфрейм для скачивания',
+        downloadTimeFrame: 'Таймфрейм скачивания',
         start: 'Старт',
         reset: 'Сброс',
         results: 'Результаты для {exchange}, {symbol}, {timeframe}',
@@ -69,8 +69,13 @@ export default {
             winrate: 'Винрейт',
             action: 'Действие',
             create: 'Создать',
-            maxDrawdownPercent: 'Просадка',
-            maxTimeInDealMins: 'Время'
+            maxDrawdownPercent: 'Макс. просадка',
+            maxTimeInDealMins: 'Макс. время',
+            info: 'Инфо',
+            tooltip: {
+                maxDrawdownPercent: 'Максимальная просадка позиции за время сделки',
+                maxTimeInDealMins: 'Максимальное время в сделке (в минутах)'
+            }
         },
         deals: {
             close: 'Закрыть',
