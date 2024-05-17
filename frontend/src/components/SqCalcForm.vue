@@ -270,7 +270,7 @@
                         :value="OptimizationAlgorithm.OMG"
                     />
                     <el-option
-                        :label="OptimizationAlgorithm.RANDOM"
+                        label="Random"
                         :value="OptimizationAlgorithm.RANDOM"
                     />
                 </el-select>
@@ -307,7 +307,7 @@
                   </template>
                   <img class="icon" src="../assets/img/info.svg" alt="/">
                 </el-tooltip>
-                <el-select v-model="calcForm.downloadTimeFrame" @change="onChangeDownloadTimeframe">
+                <el-select v-model="calcForm.downloadTimeFrame">
                     <el-option :label="'1m'" :value="'1m'"/>
                     <el-option :label="'3m'" :value="'3m'"/>
                     <el-option :label="'5m'" :value="'5m'"/>
@@ -325,7 +325,13 @@
               <el-button size="default" type="success" @click="submitForm" :disabled="loading">
                 {{ $t('main.start') }}
               </el-button>
-              <el-button size="default" @click="clearForm">{{ $t('main.reset') }}</el-button>
+              <el-button
+                size="default"
+                @click="resetForm"
+                :disabled="JSON.stringify(calcForm) === JSON.stringify(defaultFormData)"
+              >
+                {{ $t('main.reset') }}
+              </el-button>
             </div>
           </div>
         </div>
@@ -404,6 +410,18 @@
         </el-table-column>
 
         <el-table-column :label="$t('main.table.coeff')" prop="coeff" :sortable="true">
+          <template #header>
+              <span>
+                {{ $t('main.table.coeff') }}
+              </span>
+              <el-tooltip placement="bottom" effect="light">
+                <template #content>
+                  <span v-html="$t('main.table.tooltip.testTest')" />
+                </template>
+                <img class="header-icon" src="../assets/img/info.svg" alt="/">
+              </el-tooltip>
+            </template>
+
             <template #default="scope">
                 {{ scope.row.coeff || '-' }}
             </template>
@@ -454,7 +472,7 @@
         <el-table-column :label="$t('main.table.action')" align="right" :width="80">
             <template #default="scope">
                 {{ scope.row.action }}
-                <el-button type="primary" link @click="createStrategy(scope.row)">
+                <el-button type="primary" link @click="createStrategyLink(scope.row)">
                     {{ $t('main.table.create') }}
                 </el-button>
             </template>
@@ -463,84 +481,21 @@
       </el-config-provider>
     </div>
 
-    <!-- DEALS -->
-    <el-dialog
-      v-model="dealsModalVisible"
-      :title="$t('main.deals.title')"
-      width="80%"
-      @close="handleCloseDealsModal"
-      @open="handleOpenDealsModal"
-    >
-      <span class="text">{{ dealsText }}</span>
-      <div ref="chartContainer"></div>
-
-      <el-table class="table" :data="dealsTableData">
-        <el-table-column :label="$t('main.deals.timeEnter')">
-            <template #default="scope">
-                {{ getDealTime(scope.row.timeEnter) }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.deals.timeExit')">
-            <template #default="scope">
-                {{ getDealTime(scope.row.timeExit) }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.deals.priceEnter')">
-            <template #default="scope">
-                {{ scope.row.priceEnter || '-' }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.deals.priceExit')">
-            <template #default="scope">
-                {{ scope.row.priceExit || '-' }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.deals.profitPercent')">
-            <template #default="scope">
-                <span :class="{ red: Number(scope.row.profitPercent) < 0 }">
-                  {{ Number(scope.row.profitPercent).toFixed(2) }}%
-                </span>
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.deals.stopLoss')">
-            <template #default="scope">
-                {{ scope.row.isTimeStopLoss ? $t('main.deals.byTime') : (scope.row.isPercentStopLoss ? $t('main.deals.byPercent') : '-') }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.table.maxDrawdownPercent')">
-            <template #default="scope">
-                {{ scope.row.drawdownPercent ? `${scope.row.drawdownPercent.toFixed(2)}%` : '-' }}
-            </template>
-        </el-table-column>
-
-        <el-table-column :label="$t('main.table.time')">
-            <template #default="scope">
-                {{ ((scope.row.timeExit - scope.row.timeEnter) / 60000).toFixed(2) }}
-            </template>
-        </el-table-column>
-      </el-table>
-
-      <template #footer>
-        <el-button type="primary" @click="dealsModalVisible = false">
-            {{ $t('main.deals.close') }}
-        </el-button>
-      </template>
-    </el-dialog>
+    <DealsModal v-model="isDealsModalVisible" :dealsRow="dealsRow" :currentResult="currentResult" />
   </div>
 </template>
 
 <script lang="ts">
-import { Vue } from 'vue-class-component';
+import { Options, mixins } from 'vue-class-component';
+import i18n from '@/i18n';
 import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
 import { EXCHANGE, EXCHANGE_TEXT, TIMEFRAME_PERC_SETTINGS } from '../enum';
+import { calculateData, ICalculatedResult } from './calculate';
+import DealsModal from './deals-modal/DealsModal.vue';
+import BrowserLinks from './sq-calc-form-mixins/BrowserLinks';
+import TableData from './sq-calc-form-mixins/TableData';
 import {
   OptimizationAlgorithm,
   SqueezeBindings,
@@ -548,46 +503,27 @@ import {
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
-  ISqueezeDealsStatistic,
 } from 'squeeze-utils';
-import { calculateData, ICalculatedResult } from './calculate';
-import i18n from '@/i18n';
-import {
-    ActionId,
-    ChartingLibraryFeatureset,
-    ChartingLibraryWidgetOptions,
-    DatafeedConfiguration,
-    EntityId,
-    ErrorCallback,
-    HistoryCallback,
-    IAction,
-    IActionVariant,
-    IBasicDataFeed,
-    IChartingLibraryWidget,
-    LibrarySymbolInfo,
-    OnReadyCallback,
-    PeriodParams,
-    ResolutionString,
-    ResolveCallback,
-    SearchSymbolsCallback,
-    ServerTimeCallback,
-    SubscribeBarsCallback,
-    TimeFrameValue,
-    widget,
-} from '../assets/charting_library';
-import {TimeFrameToTVResolution, TradingViewDataFeed} from './tradingViewDataFeed';
-import {TradingViewDealsDisplay} from './tradingViewDealDisplay';
-
 
 const { t } = i18n.global;
 
-export default class SqCalcForm extends Vue {
+@Options({
+    components: { DealsModal },
+})
+export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
   EXCHANGE = EXCHANGE;
   EXCHANGE_TEXT = EXCHANGE_TEXT;
   OptimizationAlgorithm = OptimizationAlgorithm;
   SqueezeBindings = SqueezeBindings;
 
-  calcForm = {
+  get locale(): string {
+    return (this as any).$i18n.locale === 'ru' ? ru : en;
+  }
+
+  // FORM
+
+  calcForm: any = {}
+  defaultFormData = {
     isShort: false,
     exchange: EXCHANGE.BINANCE,
     fee: 0.075,
@@ -639,9 +575,7 @@ export default class SqCalcForm extends Vue {
     iterations: 1000,
     saveResults: 20,
   };
-
   currentResult: ICalculatedResult
-  tvWidget: IChartingLibraryWidget | undefined;
 
   calcFormRules: FormRules = {
     symbol: [{ required: true, message: t('validation.inputValue'), trigger: ['blur', 'change'] }],
@@ -838,9 +772,6 @@ export default class SqCalcForm extends Vue {
     this.calcForm.percentExitTo = data.sell.to;
   }
 
-  onChangeDownloadTimeframe() {
-  }
-
   // Search symbol
 
   symbolsList = [];
@@ -867,169 +798,9 @@ export default class SqCalcForm extends Vue {
     return (symbol) => symbol.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0;
   }
 
-  // TABLE
+  // RESET FORM
 
-  tableData = [];
-  isShowTable = false;
-  resultsCount = 0;
-  resultsText = '';
-
-  setTableData(data: ICalculatedResult) {
-    this.isShowTable = true;
-    for (const item of data.dataArr || []) {
-      this.resultsCount++
-      this.tableData.push({
-          item: item,
-          isShort: item.settings.isShort,
-          binding: item.settings.binding,
-          percentEnter: item.settings.percentEnter,
-          percentExit: item.settings.percentExit,
-          stopLossTime: item.settings.stopLossTime ? item.settings.stopLossTime / (60 * 1000) : 0,
-          stopLossPercent: item.settings.stopLossPercent,
-          timeFrame: item.settings.timeFrame,
-          oncePerCandle: item.settings.oncePerCandle,
-          totalDeals: item.totalDeals,
-          deals: item.deals,
-          totalProfitPercent: item.totalProfitPercent ? Number(item.totalProfitPercent.toFixed(2)) : 0,
-          coeff: item.coeff ? Number(item.coeff.toFixed(2)) : 0,
-          winrate: item.winRate ? Number(item.winRate.toFixed(2)) : 0,
-          maxDrawdownPercent: Number(item.maxDrawdownPercent.toFixed(2)),
-          maxTimeInDealMins: Number(Math.round(item.maxTimeInDeal / 60000).toFixed(2)),
-          symbol: data.symbol,
-          exchange: data.exchange,
-          stopOnKlineClosed: data.stopOnKlineClosed,
-      })
-    }
-    this.resultsText = `${t('main.results', {
-      exchange: EXCHANGE_TEXT[this.calcForm.exchange],
-      symbol: this.calcForm.symbol,
-      timeframe: this.calcForm.timeframe,
-    })} (${this.resultsCount}):`;
-  }
-
-  getBindingForLink(value) {
-    switch (value) {
-      case SqueezeBindings.LOW: return 'l';
-      case SqueezeBindings.HIGH: return 'h';
-      case SqueezeBindings.OPEN: return 'o';
-      case SqueezeBindings.CLOSE: return 'c';
-      case SqueezeBindings.MID_HL: return 'hl';
-      case SqueezeBindings.MID_OC: return 'oc';
-      default: return undefined;
-    }
-  }
-
-  createStrategy(data) {
-    // check and add sub domain (used for testing)
-    const cookiesObj = this.getCookiesObj();
-    const subDomain = cookiesObj.subDomain ? `${cookiesObj.subDomain}.`: '';
-
-    (window as any).gtag('event', "on_create_strategy", {
-        exchange: data.exchange,
-        symbol: data.symbol,
-        timeframe: data.timeFrame
-    });
-
-    let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tu=1`;
-    // time frame
-    link += `&tf=${data.timeFrame}`;
-    // binding
-    link += `&bi=${this.getBindingForLink(data.binding)}`;
-    // buy/sell trigger
-    link += `&bt=${data.percentEnter}&st=${data.percentExit}`;
-    // Once per candle
-    link += `&oc=${data.oncePerCandle ? 1 : 0}`;
-    // direction
-    link += `&d=${data.isShort ? 's' : 'l'}`;
-    // sl time
-    if (data.stopLossTime) {
-      link += `&slt=1&sltv=${data.stopLossTime}`;
-    }
-    // sl perc
-    if (data.stopLossPercent) {
-      link += `&sl=${data.stopLossPercent}`;
-    }
-    // Stop on closing one-min candle
-    if (data.stopOnKlineClosed) {
-      link += '&slc=1';
-    }
-    link += '&src=squeeze_calculator';
-
-    window.open(link, '_blank');
-  }
-
-  getCookiesObj() {
-    const cookiesObj: any = document.cookie.split('; ').reduce((prev, current) => {
-      const [name, ...value] = current.split('=');
-      prev[name] = value.join('=');
-      return prev;
-    }, {});
-    return cookiesObj;
-  }
-
-  // Deals
-
-  dealsModalVisible = false
-  dealsTableData = [];
-  dealsText = '';
-  dealsRowItem: ISqueezeDealsStatistic;
-  dialsDisplay: TradingViewDealsDisplay;
-
-  openDealsModal(row) {
-    this.dealsRowItem = row.item;
-    this.dealsTableData = row.deals;
-    this.dealsModalVisible = true;
-    this.dealsText = `
-      ${t('main.symbol')}: ${EXCHANGE_TEXT[row.exchange]} ${row.symbol}, 
-      ${t('main.table.percentEnter')}: ${row.percentEnter}, ${t('main.table.percentExit')}: ${row.percentExit}, ${t('main.binding')}: ${row.binding},
-      ${t('main.timeframe')}: ${row.timeFrame}, ${t('main.deals.stopLoss')}: ${row.stopLossPercent || '- '}% / ${row.stopLossTime}m, 
-      ${t('main.deals.profitPercent')}: ${row.totalProfitPercent}%,
-      ${t('main.table.coeff')}: ${row.coeff ? `${row.coeff}%` : '- '}, ${t('main.table.winrate')}: ${row.winrate}.
-    `;
-  }
-
-  getDealTime(value) {
-    const date = new Date(value);
-    const day = `0${date.getDate()}`.substr(-2);
-    const month = `0${date.getMonth() + 1}`.substr(-2);
-    const year = `0${date.getFullYear()}`.substr(-2);
-    const hours = `0${date.getHours()}`.substr(-2);
-    const minutes = `0${date.getMinutes()}`.substr(-2);
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
-  }
-
-  handleOpenDealsModal() {
-    const dataFeed = new TradingViewDataFeed(this.currentResult);
-
-    const widgetOptions: ChartingLibraryWidgetOptions = {
-      symbol: `${this.currentResult.exchange}:${this.currentResult.symbol}`,
-      interval: TimeFrameToTVResolution[this.currentResult.timeFrame] as ResolutionString,
-      fullscreen: true,
-      container: this.$refs.chartContainer as HTMLElement,
-      library_path: 'charting_library/',
-      locale: 'en',
-      datafeed: dataFeed,
-      theme: 'dark'
-    };
-
-    const tvWidget = new widget(widgetOptions);
-    this.tvWidget = tvWidget;
-
-    this.dialsDisplay = new TradingViewDealsDisplay(tvWidget, this.dealsRowItem, dataFeed);
-  }
-
-  handleCloseDealsModal() {
-    this.dealsTableData = [];
-    this.dialsDisplay.destroy();
-  }
-
-  // - - -
-
-  get locale(): string {
-    return this.$i18n.locale === 'ru' ? ru : en;
-  }
-
-  clearForm(): void {
+  resetForm(): void {
     this.downloadText = '';
     this.downloadTimeText = '';
     this.isShowTable = false;
@@ -1038,121 +809,17 @@ export default class SqCalcForm extends Vue {
     this.resultsText = '';
     this.ispercentEnterSellWasManuallySet = false;
 
-    this.calcForm = {
-      isShort: false,
-      exchange: EXCHANGE.BINANCE,
-      fee: 0.075,
-      symbol: 'BTCUSDT',
-      timeframe: '1m',
-      time: [],
-      binding: {
-        [SqueezeBindings.LOW]: true,
-        [SqueezeBindings.HIGH]: false,
-        [SqueezeBindings.OPEN]: false,
-        [SqueezeBindings.CLOSE]: false,
-        [SqueezeBindings.MID_HL]: false,
-        [SqueezeBindings.MID_OC]: false,
-      },
-      percentEnterFrom: 1,
-      percentEnterTo: 6,
-      percentExitFrom: 0.5,
-      percentExitTo: 3,
-      stopLossTime: {
-        isActive: true,
-        from: 5,
-        to: 60,
-      },
-      stopLossPercent: {
-        isActive: false,
-        from: 1,
-        to: 10,
-      },
-      oncePerCandle: false,
-      stopOnKlineClosed: true,
-      minNumDeals: {
-        isActive: false,
-        value: 0,
-      },
-      minCoeff: {
-        isActive: false,
-        value: 0,
-      },
-      minWinRate: {
-        isActive: false,
-        value: 0,
-      },
-      maxSellBuyRatio: {
-        isActive: false,
-        value: 0.5,
-      },
-      algorithm: OptimizationAlgorithm.RANDOM,
-      downloadTimeFrame: '1m',
-      iterations: 1000,
-      saveResults: 20,
-    };
+    this.calcForm = JSON.parse(JSON.stringify(this.defaultFormData))
     // @ts-ignore
     this.$refs.calcFormRef.resetFields();
-  }
-
-  // GET & APPLY LINK DATA
-
-  checkLink() {
-    const linkData = window.location.search.replace('?', '');
-    const dataArr = linkData.split('&');
-    const dataObj: any = {};
-    for (const item of dataArr) {
-        const itemArr = item.split('=');
-        dataObj[itemArr[0]] = itemArr[1];
-    }
-    if (dataObj.s) {
-      const arr = dataObj.s.split(':');
-      this.calcForm.exchange = arr[0];
-      this.calcForm.symbol = arr[1];
-    }
-    if (dataObj.tf) {
-      this.calcForm.timeframe = this.getTimeFrame(dataObj.tf);
-    }
-  }
-
-  getTimeFrame(minutes) {
-    switch (Number(minutes)) {
-      case 1: return 'lm';
-      case 3: return '3m';
-      case 5: return '5m';
-      case 15: return '15m';
-      case 30: return '30m';
-      case 60: return '1h';
-      case 120: return '2h';
-      case 240: return '4h';
-      case 360: return '6h';
-      case 480: return '8h';
-      case 720: return '12h';
-      case 1440: return '1d';
-      default: return '1d';
-    }
-  }
-
-  getBindingText(value) {
-    switch (value) {
-      case SqueezeBindings.LOW: return t('main.low');
-      case SqueezeBindings.HIGH: return t('main.high');
-      case SqueezeBindings.OPEN: return t('main.open');
-      case SqueezeBindings.CLOSE: return t('main.close');
-      case SqueezeBindings.MID_HL: return t('main.midHL');
-      case SqueezeBindings.MID_OC: return t('main.midOC');
-      default: return '';
-    }
   }
 
   // - - -
 
   created() {
+    this.calcForm = JSON.parse(JSON.stringify(this.defaultFormData))
     this.getSymbols(this.calcForm.exchange)
     this.checkLink();
   }
 }
 </script>
-
-<style lang="scss">
-@import "./sq-calc-form.scss";
-</style>
