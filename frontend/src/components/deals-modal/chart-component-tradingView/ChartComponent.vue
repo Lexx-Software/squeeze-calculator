@@ -24,8 +24,8 @@ export default class DealsModal extends Vue {
     declare currentResult: ICalculatedResult;
     declare item: any;
 
-    tvWidget: IChartingLibraryWidget | undefined;
-    dialsDisplay: TradingViewDealsDisplay;
+    _tvWidget: IChartingLibraryWidget | undefined;
+    _dialsDisplay: TradingViewDealsDisplay;
 
     initChart() {
         const dataFeed = new TradingViewDataFeed(this.currentResult);
@@ -33,21 +33,19 @@ export default class DealsModal extends Vue {
         const widgetOptions: ChartingLibraryWidgetOptions = {
             symbol: `${this.currentResult.exchange}:${this.currentResult.symbol}`,
             interval: TimeFrameToTVResolution[this.currentResult.timeFrame] as ResolutionString,
-            fullscreen: true,
+            autosize: true,
+            //fullscreen: true,
             container: this.$refs.chartContainer as HTMLElement,
             library_path: 'charting_library/',
             locale: 'en',
             datafeed: dataFeed,
-            theme: 'dark',
+            theme: 'dark'
         };
 
         const tvWidget = new widget(widgetOptions);
-        this.tvWidget = tvWidget;
+        this._tvWidget = tvWidget;
 
-        this.dialsDisplay = new TradingViewDealsDisplay(tvWidget, this.item, dataFeed);
-
-        //@ts-ignore
-        this.tvWidget._iFrame.style.height = '100%'
+        this._dialsDisplay = new TradingViewDealsDisplay(tvWidget, this.item, dataFeed);
     }
 
     mounted() {
@@ -55,7 +53,8 @@ export default class DealsModal extends Vue {
     }
 
     unmounted() {
-        this.dialsDisplay.destroy();
+        this._tvWidget.remove();
+        this._dialsDisplay.destroy();
     }
 }
 </script>

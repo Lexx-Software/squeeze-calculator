@@ -1,5 +1,5 @@
 import { ISqueezeDealsStatistic } from 'squeeze-utils';
-import { IChartingLibraryWidget } from '../../../assets/charting_library';
+import { EntityId, IChartingLibraryWidget } from '../../../assets/charting_library';
 import { TradingViewDataFeed } from './tradingViewDataFeed';
 
 export class TradingViewDealsDisplay {
@@ -14,7 +14,7 @@ export class TradingViewDealsDisplay {
         this._recheckDisplayTrades();
     }
 
-    private _createShape(time: number, price: number, isBuy: boolean, isStopLoss: boolean = false): string {
+    private _createShape(time: number, price: number, isBuy: boolean, isStopLoss: boolean = false): EntityId | null {
         return this._widget.activeChart().createMultipointShape([{
             time: Math.round(time / 1000),
             price: price
@@ -96,5 +96,6 @@ export class TradingViewDealsDisplay {
             }
         }
         this._deals = undefined;
+        this._dataFeed = undefined;
     }
 }

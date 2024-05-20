@@ -1,15 +1,12 @@
 const path = require("path");
 const { defineConfig } = require('@vue/cli-service')
+const fs = require("fs");
 
-module.exports = defineConfig({
+const config = {
   productionSourceMap: true,
   transpileDependencies: true,
 
   devServer: {
-    static: { 
-      directory: path.resolve(__dirname, './src/assets/charting_library'), 
-      publicPath: '/charting_library'
-    },
     client: {
       overlay: {
         runtimeErrors: (error) => {
@@ -25,4 +22,13 @@ module.exports = defineConfig({
       },
     },
   },
-})
+}
+
+if (fs.existsSync('./src/assets/charting_library')) {
+  config.devServer.static = { 
+    directory: path.resolve(__dirname, './src/assets/charting_library'), 
+    publicPath: '/charting_library'
+  }
+}
+
+module.exports = defineConfig(config)

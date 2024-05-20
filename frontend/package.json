@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "yarn run serve",
-    "serve": "vue-cli-service serve --port 8080",
-    "build": "vue-cli-service build"
+    "serve": "node prebuild.js & vue-cli-service serve --port 8080",
+    "build": "node prebuild.js & vue-cli-service build"
   },
   "dependencies": {
     "copy-webpack-plugin": "^12.0.2",

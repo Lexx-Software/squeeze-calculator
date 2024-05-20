@@ -416,7 +416,7 @@
               </span>
               <el-tooltip placement="bottom" effect="light">
                 <template #content>
-                  <span v-html="$t('main.table.tooltip.testTest')" />
+                  <span v-html="$t('main.table.tooltip.coeff')" />
                 </template>
                 <img class="header-icon" src="../assets/img/info.svg" alt="/">
               </el-tooltip>
