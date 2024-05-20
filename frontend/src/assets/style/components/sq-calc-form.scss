@@ -1,5 +1,3 @@
-@import '@/assets/style/base/vars.scss';
-
 .sq-calc-form {
     margin-top: 18px;
     .form {
@@ -118,7 +116,24 @@
     }
 }
 
-.el-dialog__body .text {
-    position: relative;
-    bottom: 20px;
+.el-dialog__body {
+    padding-top: 10px;
+    .deats-header-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-right: 40px;
+        position: relative;
+        bottom: 20px;
+        .title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .text {
+            font-size: 12px;
+        }
+    }
+    .chart {
+        height: 75vh;
+    }
 }

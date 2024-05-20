@@ -75,7 +75,8 @@ export default {
             info: 'Инфо',
             tooltip: {
                 maxDrawdownPercent: 'Максимальная просадка позиции за время сделки',
-                maxTimeInDealMins: 'Максимальное время в сделке (в минутах)'
+                maxTimeInDealMins: 'Максимальное время в сделке (в минутах)',
+                testTest: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor<br>incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud<br>exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
             }
         },
         deals: {
@@ -88,7 +89,9 @@ export default {
             profitPercent: 'Профит',
             stopLoss: 'Cтоплосс',
             byTime: 'Временной',
-            byPercent: 'Процентный'
+            byPercent: 'Процентный',
+            table: 'Таблица',
+            chart: 'График'
         }
     },
 };

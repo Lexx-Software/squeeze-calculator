@@ -75,7 +75,8 @@ export default {
             time: "Time",
             tooltip: {
                 maxDrawdownPercent: 'Maximum position drawdown during a trade',
-                maxTimeInDealMins: 'Maximum time in a trade (minutes)'
+                maxTimeInDealMins: 'Maximum time in a trade (minutes)',
+                testTest: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor<br>incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud<br>exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
             }
         },
         deals: {
@@ -87,8 +88,10 @@ export default {
             priceExit: 'Exit price',
             profitPercent: 'Profit',
             stopLoss: 'Stoploss',
-            byTime: 'by time',
-            byPercent: 'by percent'
+            byTime: 'By time',
+            byPercent: 'By percent',
+            table: 'Table',
+            chart: 'Chart'
         }
     },
 };

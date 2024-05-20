@@ -1,5 +1,5 @@
 import { ISqueezeDealsStatistic } from 'squeeze-utils';
-import { IChartingLibraryWidget } from '../assets/charting_library';
+import { IChartingLibraryWidget } from '../../../assets/charting_library';
 import { TradingViewDataFeed } from './tradingViewDataFeed';
 
 export class TradingViewDealsDisplay {

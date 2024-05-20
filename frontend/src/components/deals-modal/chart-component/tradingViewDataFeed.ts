@@ -10,9 +10,9 @@ import {
     SearchSymbolsCallback,
     SubscribeBarsCallback,
     Bar
-} from '../assets/charting_library';
-import { ICalculatedResult } from './calculate';
-import { KlineBuilder } from 'squeeze-utils/src/klineBuilder';
+} from '../../../assets/charting_library';
+import { ICalculatedResult } from '../../calculate';
+import { KlineBuilder } from 'squeeze-utils';
 
 
 export const TVResolutionToTimeFrame = {
@@ -160,7 +160,6 @@ export class TradingViewDataFeed {
                     volume: k.baseVolume
                 });
             }
-
             endIndex++
         }
 
@@ -179,9 +178,7 @@ export class TradingViewDataFeed {
         onTick: SubscribeBarsCallback,
         listenerGuid: string,
         onResetCacheNeededCallback: () => void
-    ): void {
-    }
+    ): void {}
     
-    unsubscribeBars(listenerGuid: string) {
-    }
+    unsubscribeBars(listenerGuid: string) {}
 }

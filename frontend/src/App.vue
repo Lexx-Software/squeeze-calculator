@@ -64,45 +64,5 @@ export default class App extends Vue {
 </script>
 
 <style lang="scss">
-@import "./assets/style/app.scss";
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 60px;
-  .logo {
-    width: 160px;
-  }
-  .link {
-    color: $blue;
-    margin-right: 32px;
-  }
-  .dropdown {
-    cursor: pointer;
-    position: relative;
-    top: 4px;
-  }
-  .arrow-symbol {
-    position: relative;
-    bottom: 4px;
-    font-size: 12px;
-  }
-}
-
-.footer {
-  padding: 6px 0;
-  text-align: center;
-  margin-top: 40px;
-
-  .copyright, .text {
-    font-size: 12px;
-    color: $grey;
-    line-height: 12px;
-    display: block;
-  }
-  .text {
-    margin-bottom: 6px;
-  }
-}
+@import "./assets/style/index.scss";
 </style>
