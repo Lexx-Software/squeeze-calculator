@@ -76,8 +76,8 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
 // Example how to get the statistic for special config
 calculateOne('binance', 'BTCUSDT', 1714514400000, 1715205600000, 0.075, {
     isShort: false,
-    percentEnter: 0.9,
-    percentExit: 1.1,
+    percentEnter: 0.4,
+    percentExit: 0.5,
     binding: SqueezeBindings.CLOSE,
     stopLossTime: 6 * 60 * 1000,
     timeFrame: '1m',

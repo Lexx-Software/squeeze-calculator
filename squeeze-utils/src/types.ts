@@ -16,3 +16,8 @@ export interface IKline {
 export interface IKeyValueObject {
     [key: string]: any;
 }
+
+export interface IRange {
+    from: number;
+    to: number;
+}

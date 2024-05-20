@@ -1,28 +1,16 @@
 import { IProgressListener } from "./iProgressListener";
 import { ISqueezeDealsStatistic, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "./squeezeCalculator";
-import { IKline } from "./types";
-import { invertKlines, sortedArrayIndex } from './utils';
+import { IKline, IRange } from "./types";
+import { floorFloat, invertKlines, sortedArrayIndex } from './utils';
 import { BaseOptVar, CategoricalOptVar, ConstantOptVar, IntegerOptVar, OptimizationAlgorithm, OptimizersMap } from './optimization';
 
 export interface ISqueezeOptimizationsParameters {
     isShort: boolean;
-    percentEnter: {
-        from: number;
-        to: number;
-    };
-    percentExit: {
-        from: number;
-        to: number;
-    };
+    percentEnter: IRange;
+    percentExit: IRange;
     binding: SqueezeBindings[];
-    stopLossTime?: {
-        from: number;   // mins
-        to: number;     // mins
-    };
-    stopLossPercent?:{
-        from: number;
-        to: number;
-    };
+    stopLossTime?: IRange; // mins
+    stopLossPercent?: IRange;
     stopOnKlineClosed?: boolean;
     timeFrame: string;
     oncePerCandle: boolean;
@@ -40,6 +28,7 @@ const PERCENT_ACCURACY = 10
 
 export class BestSqueezeFinder {
     private _currentIteration: number = 0;
+    private _numIterations: number = 0;
     private _topIterations: ISqueezeDealsStatistic[];
 
     constructor(private _symbolsTicker: number,
@@ -57,7 +46,6 @@ export class BestSqueezeFinder {
     private static _convertToDims(params: ISqueezeOptimizationsParameters): BaseOptVar[] {
         return [
             new IntegerOptVar(params.percentEnter.from * PERCENT_ACCURACY, params.percentEnter.to * PERCENT_ACCURACY),      // percentEnter
-            new IntegerOptVar(params.percentExit.from * PERCENT_ACCURACY, params.percentExit.to * PERCENT_ACCURACY),        // percentExit
             new CategoricalOptVar(params.binding),                                                                          // binding
             params.stopLossTime ? new IntegerOptVar(params.stopLossTime.from, params.stopLossTime.to) : new ConstantOptVar(undefined),           // stopLossTime
             params.stopLossPercent ? new IntegerOptVar(params.stopLossPercent.from * PERCENT_ACCURACY, params.stopLossPercent.to * PERCENT_ACCURACY) : new ConstantOptVar(undefined),  // stopLossPercent
@@ -135,50 +123,78 @@ export class BestSqueezeFinder {
         const params: ISqueezeParameters = {
             isShort: this._params.isShort,
             percentEnter: x[0] / PERCENT_ACCURACY,
-            percentExit: x[1] / PERCENT_ACCURACY,
-            binding: x[2],
-            stopLossTime: x[3] ? x[3] * 60 * 1000 : undefined,
-            stopLossPercent: x[4] ? x[4] / PERCENT_ACCURACY : undefined,
+            percentExit: this._params.percentExit,
+            binding: x[1],
+            stopLossTime: x[2] ? x[2] * 60 * 1000 : undefined,
+            stopLossPercent: x[3] ? x[3] / PERCENT_ACCURACY : undefined,
             stopOnKlineClosed: this._params.stopOnKlineClosed,
             timeFrame: this._params.timeFrame,
             oncePerCandle: this._params.oncePerCandle
         }
-        await this._progressBar?.onProgressUpdated(this._currentIteration++, this._params.iterations)
+        await this._progressBar?.onProgressUpdated(this._currentIteration++, this._numIterations)
 
         // check maxSellBuyRatio
-        if (this._params.filters?.maxSellBuyRatio && (this._params.filters.maxSellBuyRatio + 0.1e-10) < params.percentExit / params.percentEnter) {
-            return 0;
+        if (this._params.filters?.maxSellBuyRatio) {
+            const maxPercentExit = floorFloat(params.percentEnter * this._params.filters.maxSellBuyRatio * 10, 1);
+
+            if (typeof params.percentExit === 'number') {
+                if (params.percentExit > maxPercentExit) {
+                    return 0;
+                }
+            } else {
+                if (params.percentExit.from > maxPercentExit) {
+                    return 0;
+                }
+
+                if (params.percentExit.to > maxPercentExit ) {
+                    params.percentExit.to = maxPercentExit
+                }
+
+                params.percentExit.to = Math.min()
+            }
         }
 
         // do calculation
         const squeezeCalculator = new SqueezeCalculator(params, this._symbolsTicker, this._commissionPercent);
-        const stat = squeezeCalculator.calculate(this._klines, this._klinesTimeFrame);
-        const passesFilters = this._passesUserFilters(stat);
-        if (stat.totalDeals > 0 && passesFilters) {
-            this._addIterationResult(stat)
+        const stats = squeezeCalculator.calculate(this._klines, this._klinesTimeFrame);
+
+        let bestStatPassesFilters: ISqueezeDealsStatistic = undefined;
+        let bestStat: ISqueezeDealsStatistic = undefined;
+        for (const stat of stats) {
+            const passesFilters = this._passesUserFilters(stat);
+            if (stat.totalDeals > 0 && passesFilters) {
+                this._addIterationResult(stat);
+                if (!bestStatPassesFilters || bestStatPassesFilters.totalProfitPercent < stat.totalProfitPercent) {
+                    bestStatPassesFilters = stat;
+                }
+            }
+
+            if (!bestStat || bestStat.totalProfitPercent < stat.totalProfitPercent) {
+                bestStat = stat;
+            }
         }
 
         // we have a result but it does not meet user filters
-        if (!passesFilters) {
+        if (!bestStatPassesFilters) {
             if (this._topIterations.length == 0) {
                 // no iterations were done -> skip it
-                return -Math.min(0, stat.totalProfitPercent);
+                return -Math.min(0, bestStat.totalProfitPercent);
             }
 
-            if (this._topIterations[0].totalProfitPercent >= stat.totalProfitPercent) {
+            if (this._topIterations[0].totalProfitPercent >= bestStat.totalProfitPercent) {
                 // this is not a best iteration => add 30% fine
-                return stat.totalProfitPercent > 0 ? -stat.totalProfitPercent * 0.70 : -stat.totalProfitPercent
+                return bestStat.totalProfitPercent > 0 ? -bestStat.totalProfitPercent * 0.70 : -bestStat.totalProfitPercent
             } else {
                 // this is the best iteration => make it not a best one
                 return -this._topIterations[0].totalProfitPercent * 0.9
             }
         }
 
-        return -stat.totalProfitPercent;
+        return -bestStatPassesFilters.totalProfitPercent;
     }
 
     async _optimizationJsMinimize(optimizer): Promise<void> {
-        for(var iter=0; iter < this._params.iterations; iter++){
+        for(var iter=0; iter < this._numIterations; iter++){
             var x = optimizer.ask()
             var y = await this._squeezeOptimizationFunctionOptimjs(x)
             optimizer.tell([x], [y])
@@ -190,8 +206,19 @@ export class BestSqueezeFinder {
         this._topIterations = []
 
         const dims = BestSqueezeFinder._convertToDims(this._params);
-        await this._optimizationJsMinimize(OptimizersMap[this._params.algorithm](dims, this._params.iterations));
-        await this._progressBar?.onProgressUpdated(this._params.iterations, this._params.iterations);
+
+
+        let algorithm = this._params.algorithm;
+
+        const maxIterations = BestSqueezeFinder.totalNumberVariants(this._params);
+        this._numIterations = this._params.iterations;
+        if (this._numIterations >= maxIterations) {
+            this._numIterations = maxIterations;
+            algorithm = OptimizationAlgorithm.ALL;
+        }
+
+        await this._optimizationJsMinimize(OptimizersMap[algorithm](dims, this._numIterations));
+        await this._progressBar?.onProgressUpdated(this._numIterations, this._numIterations);
         return this._topIterations && this._topIterations[0];
     }
 

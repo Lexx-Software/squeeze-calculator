@@ -3,7 +3,8 @@ import * as optimjs from 'optimization-js'
 export enum OptimizationAlgorithm {
     OMG = 'OMG',
     RANDOM = 'random',
-    GRID = 'GRID'
+    GRID = 'GRID',
+    ALL = 'ALL'
 }
 
 
@@ -97,9 +98,37 @@ export class GridOptimizer {
     } 
 }
 
+// does a ALL optimization, follows optimization-js concept
+export class AllOptimizer {
+    private _currentVariant: number;
+
+    constructor(private _variables: BaseOptVar[], iterations: number) {
+        const totalVariants = _variables.reduce((p, c) => p * c.numVariants(), 1)
+        this._currentVariant = 0;
+    }
+
+    ask(): any[] {
+        const result = [];
+        let currentVariantInt = this._currentVariant;
+        for (const v of this._variables) {
+            const numVariants = v.numVariants();
+            result.push(v.valueAtIndex(currentVariantInt % numVariants));
+            currentVariantInt = Math.floor(currentVariantInt / numVariants);
+        }
+
+        this._currentVariant += 1;
+        return result;
+    }
+
+    tell(a: any[], b: [number]) {
+        // ignore
+    } 
+}
+
 
 export const OptimizersMap: {[name: string]: any} = {
     [OptimizationAlgorithm.RANDOM]: (dims: BaseOptVar[], iterations: number) => optimjs.RandomOptimizer(dims.map(e => e.toOptimizationJs())),
     [OptimizationAlgorithm.OMG]: (dims: BaseOptVar[], iterations: number) => optimjs.OMGOptimizer(dims.map(e => e.toOptimizationJs())),
-    [OptimizationAlgorithm.GRID]: (dims: BaseOptVar[], iterations: number) => new GridOptimizer(dims, iterations)
+    [OptimizationAlgorithm.GRID]: (dims: BaseOptVar[], iterations: number) => new GridOptimizer(dims, iterations),
+    [OptimizationAlgorithm.ALL]: (dims: BaseOptVar[], iterations: number) => new AllOptimizer(dims, iterations)
 }
