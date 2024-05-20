@@ -32,7 +32,7 @@ export default class DealsModal extends Vue {
 
         const widgetOptions: ChartingLibraryWidgetOptions = {
             symbol: `${this.currentResult.exchange}:${this.currentResult.symbol}`,
-            interval: TimeFrameToTVResolution[this.currentResult.timeFrame] as ResolutionString,
+            interval: '60' as ResolutionString, // TimeFrameToTVResolution[this.currentResult.timeFrame] as ResolutionString,
             autosize: true,
             //fullscreen: true,
             container: this.$refs.chartContainer as HTMLElement,

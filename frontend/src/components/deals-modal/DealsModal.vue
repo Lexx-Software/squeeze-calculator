@@ -101,7 +101,7 @@ export default class DealsModal extends Vue {
     declare currentResult: ICalculatedResult;
 
     dealsModalVisible = false;
-    viewSelect = 'table';
+    viewSelect = 'chart';
 
     get isVisible() {
         return this.value;
