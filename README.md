@@ -17,6 +17,10 @@ Squeeze Bot is a trading bot, and this repository contains code to calculate par
 
 `frontend` contains the code for the [Squeeze Calculator page](https://squeeze-calculator.lexx-trade.com/).
 
+## TradingView charting library
+
+To start the frontend code with the embedded charting library, request access to the charting library at https://www.tradingview.com/ and place its code in the `frontend/src/assets/charting_library` folder.
+
 ## License
 
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

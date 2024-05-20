@@ -3,6 +3,7 @@
 
 # sources
 charting_library
+frontend/src/components/deals-modal/chart-component
 frontend/**/*.js
 frontend/**/*.map
 sample/**/*.js
@@ -14,3 +15,4 @@ package-lock.json
 
 # destination
 frontend/dist/
+
