@@ -4,6 +4,9 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 16px;
+        .el-select__selection {
+            min-width: 86px;
+        }
         .main-fields {
             margin-left: 20px;
         }
@@ -50,11 +53,18 @@
                         right: 0;
                     }
                 }
+                .exchange-select {
+                    .el-select__selection {
+                        min-width: 146px;
+                    }
+                }
                 .short-input {
                     width: 100px;
                 }
-                .short-select .el-input {
-                    width: 100px;
+                .short-select {
+                    .el-select__selection {
+                        min-width: 66px;
+                    }
                 }
                 .is-tooltip {
                     .el-form-item__label {
