@@ -19,7 +19,7 @@
 
             <div class="block">
               <el-form-item :label="`${$t('main.exchange')}:`">
-                <el-select v-model="calcForm.exchange" @change="(e) => getSymbols(e)">
+                <el-select class="exchange-select" v-model="calcForm.exchange" @change="(e) => getSymbols(e)">
                     <el-option
                         :label="EXCHANGE_TEXT[EXCHANGE.BINANCE]"
                         :value="EXCHANGE.BINANCE"
