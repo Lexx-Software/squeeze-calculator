@@ -41,6 +41,14 @@
                     .el-form-item__label {
                         width: 100px !important;
                     }
+                    .warn-text {
+                        color: $yellow;
+                        font-size: 10px;
+                        position: absolute;
+                        white-space: nowrap;
+                        bottom: -19px;
+                        right: 0;
+                    }
                 }
                 .short-input {
                     width: 100px;

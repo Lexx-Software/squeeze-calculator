@@ -4,7 +4,7 @@
         width="80%"
         top="5vh"
         lock-scroll
-        @close="viewSelect = 'table'"
+        @close="viewSelect = 'chart'"
     >
         <div class="deats-header-block">
             <span class="title">{{ $t('main.deals.title') }}</span>

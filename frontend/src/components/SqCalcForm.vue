@@ -52,6 +52,9 @@
                     <el-option :label="'Long'" :value="false"/>
                     <el-option :label="'Short'" :value="true"/>
                 </el-select>
+                <span v-if="calcForm.isShort && calcForm.exchange === EXCHANGE.BINANCE" class="warn-text">
+                    {{ $t('main.shortIsNotSupported') }}
+                </span>
               </el-form-item>
             </div>
 
@@ -472,7 +475,12 @@
         <el-table-column :label="$t('main.table.action')" align="right" :width="80">
             <template #default="scope">
                 {{ scope.row.action }}
-                <el-button type="primary" link @click="createStrategyLink(scope.row)">
+                <el-button
+                    type="primary"
+                    link
+                    @click="createStrategyLink(scope.row)"
+                    :disabled="scope.row.isShort && scope.row.exchange === EXCHANGE.BINANCE"
+                >
                     {{ $t('main.table.create') }}
                 </el-button>
             </template>
