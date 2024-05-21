@@ -14,6 +14,7 @@ export function sleep(ms: number): Promise<void> {
 class ProgressBar implements IProgressListener {
     private _startTime: number | undefined;
     private _lastUpdateTime: number | undefined;
+    private _lastUiUpdateTime: number | undefined;
     private _lastPercent: number | undefined;
 
     constructor(private _cb) {
@@ -23,9 +24,12 @@ class ProgressBar implements IProgressListener {
     async onProgressUpdated(currentValue: number, total: number): Promise<void> {
         this._lastUpdateTime = Date.now();
         const percent = (currentValue / total) * 100;
-        if (currentValue !== 0 && currentValue !== total && percent - Number(this._lastPercent || 0) < 5) {
+        if (currentValue !== 0 && currentValue !== total && percent - Number(this._lastPercent || 0) < 1
+            && (this._lastUpdateTime - this._lastUiUpdateTime < 5000)) {
             return;
         }
+
+        this._lastUiUpdateTime = this._lastUpdateTime;
 
         this._cb({ progress: percent.toFixed(2) })
         await sleep(1);
@@ -39,7 +43,8 @@ class ProgressBar implements IProgressListener {
     reset() {
         this._lastPercent = 0;
         this._startTime = Date.now();
-        this._lastUpdateTime = Date.now();
+        this._lastUpdateTime = this._startTime;
+        this._lastUiUpdateTime = this._lastUpdateTime;
     }
 }
 

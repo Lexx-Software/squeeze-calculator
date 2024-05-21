@@ -1,7 +1,7 @@
 import { IProgressListener } from "./iProgressListener";
 import { ISqueezeDealsStatistic, ISqueezeParameters, SqueezeBindings, SqueezeCalculator } from "./squeezeCalculator";
 import { IKline, IRange } from "./types";
-import { floorFloat, invertKlines, sortedArrayIndex } from './utils';
+import { deepCopy, floorFloat, invertKlines, sortedArrayIndex } from './utils';
 import { BaseOptVar, CategoricalOptVar, ConstantOptVar, IntegerOptVar, OptimizationAlgorithm, OptimizersMap } from './optimization';
 
 export interface ISqueezeOptimizationsParameters {
@@ -135,7 +135,8 @@ export class BestSqueezeFinder {
 
         // check maxSellBuyRatio
         if (this._params.filters?.maxSellBuyRatio) {
-            const maxPercentExit = floorFloat(params.percentEnter * this._params.filters.maxSellBuyRatio * 10, 1);
+            params.percentExit = deepCopy(params.percentExit);
+            const maxPercentExit = floorFloat(params.percentEnter * this._params.filters.maxSellBuyRatio, 1);
 
             if (typeof params.percentExit === 'number') {
                 if (params.percentExit > maxPercentExit) {
@@ -149,8 +150,6 @@ export class BestSqueezeFinder {
                 if (params.percentExit.to > maxPercentExit ) {
                     params.percentExit.to = maxPercentExit
                 }
-
-                params.percentExit.to = Math.min()
             }
         }
 
