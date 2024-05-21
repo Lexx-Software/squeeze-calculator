@@ -4,7 +4,8 @@
         width="80%"
         top="5vh"
         lock-scroll
-        @close="viewSelect = 'chart'"
+        @open="handleOpenModal"
+        @close="handleCloseModal"
     >
         <div class="deats-header-block">
             <span class="title">{{ $t('main.deals.title') }}</span>
@@ -17,14 +18,19 @@
         
         <!-- CHART -->
         <ChartComponent
-            v-if="viewSelect === 'chart'"
+            ref="chartComponent"
             class="chart"
+            :class="{ hide: viewSelect !== 'chart' }"
             :currentResult="currentResult"
             :item="dealsRow.item"
         />
 
         <!-- TABLE -->
-        <el-table v-else class="table" :data="dealsRow.deals">
+        <el-table
+            class="table"
+            :class="{ hide: viewSelect !== 'table' }"
+            :data="dealsRow.deals"
+        >
             <el-table-column :label="$t('main.deals.timeEnter')">
                 <template #default="scope">
                     {{ getDealTime(scope.row.timeEnter) }}
@@ -99,6 +105,7 @@ export default class DealsModal extends Vue {
     declare value: boolean;
     declare dealsRow: any;
     declare currentResult: ICalculatedResult;
+    declare $refs: any;
 
     dealsModalVisible = false;
     viewSelect = 'chart';
@@ -132,6 +139,15 @@ export default class DealsModal extends Vue {
         const hours = `0${date.getHours()}`.substr(-2);
         const minutes = `0${date.getMinutes()}`.substr(-2);
         return `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+
+    handleOpenModal() {
+        this.$refs.chartComponent.initChart();
+    }
+
+    handleCloseModal() {
+        this.viewSelect = 'chart';
+        this.$refs.chartComponent.destroyChart();
     }
 }
 </script>

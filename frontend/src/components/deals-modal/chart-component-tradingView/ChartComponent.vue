@@ -48,11 +48,7 @@ export default class DealsModal extends Vue {
         this._dialsDisplay = new TradingViewDealsDisplay(tvWidget, this.item, dataFeed);
     }
 
-    mounted() {
-        this.initChart();
-    }
-
-    unmounted() {
+    destroyChart() {
         this._tvWidget.remove();
         this._dialsDisplay.destroy();
     }
