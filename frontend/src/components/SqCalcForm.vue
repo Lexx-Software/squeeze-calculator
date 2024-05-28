@@ -580,8 +580,8 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
     },
     algorithm: OptimizationAlgorithm.RANDOM,
     downloadTimeFrame: '1m',
-    iterations: 1000,
-    saveResults: 20,
+    iterations: 3000,
+    saveResults: 50,
   };
   currentResult: ICalculatedResult
 

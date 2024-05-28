@@ -74,14 +74,17 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
 
 
 // Example how to get the statistic for special config
-calculateOne('binance', 'BTCUSDT', 1714514400000, 1715205600000, 0.075, {
+calculateOne('binance', 'SOLBTC', 1703768400000, 1703854800000, 0.075, {
     isShort: false,
-    percentEnter: 0.4,
-    percentExit: 0.5,
+    percentEnter: 1.1,
+    percentExit: {
+        from: 0.5,
+        to: 3.0
+    },
     binding: SqueezeBindings.CLOSE,
-    stopLossTime: 6 * 60 * 1000,
-    timeFrame: '1m',
-    oncePerCandle: false
+    stopLossTime: undefined,
+    timeFrame: '5m',
+    oncePerCandle: true
 });
 
 /*
@@ -108,7 +111,7 @@ findBestSqueeze('BTCUSDT', Date.now() - 7 * 24 * 60 * 60 * 1000, undefined, 0.07
     oncePerCandle: true,
     stopOnKlineClosed: true,
     algorithm: OptimizationAlgorithm.RANDOM,
-    iterations: 1000,
+    iterations: 3000,
     filters: {
         //minNumDeals: 10
     }

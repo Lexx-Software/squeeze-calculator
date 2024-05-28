@@ -51,7 +51,6 @@ export class TradingViewDataFeed {
     public lastLoadedDataHistoryTime: number;
 
     constructor(private _result: ICalculatedResult) {
-
     }
 
     private _getSuppliedResolutions(): ResolutionString[] {
@@ -90,7 +89,7 @@ export class TradingViewDataFeed {
 			description: 'symbol',
 			exchange: this._result.exchange,
 			type: 'crypto',
-		}]));
+		}]), 0);
     }
 
     resolveSymbol(
@@ -104,7 +103,7 @@ export class TradingViewDataFeed {
             'full_name': `${this._result.exchange}:${this._result.symbol}`,
             'description':`${this._result.exchange}:${this._result.symbol}`,
             'listed_exchange': this._result.exchange,
-            'format': 'volume',
+            'format': 'price',
             'type': 'crypto',
             'session': '24x7',
             'timezone': 'Etc/UTC',
@@ -119,7 +118,7 @@ export class TradingViewDataFeed {
             'data_status': 'streaming',
             'expired': true,
             'expiration_date': (this._result.klines[this._result.klines.length - 1].openTime) / SEC_MS
-        }));
+        }), 0);
     }
 
     getBars(

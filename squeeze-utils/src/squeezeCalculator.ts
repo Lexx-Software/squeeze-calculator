@@ -110,9 +110,9 @@ export class SqueezeCalculator {
             this._addPercentExitForCalculations(_params.percentExit);
         } else {
             let percentExit = _params.percentExit.from;
-            while (percentExit <= _params.percentExit.to + Number.EPSILON) {
+            while (percentExit <= _params.percentExit.to + 0.000000001) {
                 this._addPercentExitForCalculations(percentExit);
-                percentExit += 0.1
+                percentExit += 0.1;
             }
         }
     }
@@ -253,7 +253,7 @@ export class SqueezeCalculator {
 
         // if positions are not closed, close them by the last kline price
         if (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
-            const deal = this._buildDeal(dealContext, klines[klines.length - 1].close, klines[klines.length - 1].closeTime);
+            const deal = this._buildDeal(dealContext, klines[klines.length - 1].close, klines[klines.length - 1].closeTime, 'time');
             while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
                 this._resultsContext[contextIdx].lockedTill = deal.timeExit;
                 this._resultsContext[contextIdx].deals.push(deal)
@@ -296,7 +296,7 @@ export class SqueezeCalculator {
                 if (this._params.oncePerCandle && !this._oncePerCandleCurrentTime) {
                     const ftMs = TimeFrameSeconds[this._params.timeFrame];
                     // calculate the end of next kline
-                    this._oncePerCandleCurrentTime = Math.floor(klines[i].openTime / ftMs) * ftMs + 2 * ftMs - 1;
+                    this._oncePerCandleCurrentTime = Math.floor(kline.openTime / ftMs) * ftMs + ftMs - 1;
                 }
 
                 this._calculateDeals(klines, i, currentBuyPrice);
@@ -346,7 +346,7 @@ export class SqueezeCalculator {
                 sumStops += d.profitPercent;
             }
 
-            if (d.isTimeStopLoss || d.isTimeStopLoss) {
+            if (d.isTimeStopLoss || d.isPercentStopLoss) {
                 result.numStopLossDeals += 1;
             }
 

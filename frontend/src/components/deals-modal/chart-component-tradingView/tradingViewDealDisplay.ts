@@ -53,7 +53,11 @@ export class TradingViewDealsDisplay {
             }
 
             if (!dealAny._exitEntityId && visibleRangeStart <= deal.timeExit) {
-                dealAny._exitEntityId = this._createShape(deal.timeExit, deal.priceExit, this._deals.settings.isShort, deal.isPercentStopLoss || deal.isTimeStopLoss);
+                dealAny._exitEntityId = this._createShape(
+                    Math.floor(deal.timeExit / 60000) * 60000, 
+                    deal.priceExit, this._deals.settings.isShort,
+                    deal.isPercentStopLoss || deal.isTimeStopLoss
+                );
             }
         }
     }

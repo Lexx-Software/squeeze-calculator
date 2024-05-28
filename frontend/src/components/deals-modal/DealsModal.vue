@@ -7,7 +7,7 @@
         @open="handleOpenModal"
         @close="handleCloseModal"
     >
-        <div class="deats-header-block">
+        <div class="deals-header-block">
             <span class="title">{{ $t('main.deals.title') }}</span>
             <span class="text">{{ dealsText }}</span>
             <el-radio-group class="radio" v-model="viewSelect" size="small">

@@ -77,7 +77,7 @@ export default {
             tooltip: {
                 maxDrawdownPercent: 'Maximum position drawdown during a trade',
                 maxTimeInDealMins: 'Maximum time in a trade (minutes)',
-                coeff: 'The ratio of total profit from winning trades to total loss from losing trades.'
+                coeff: 'Profit-factor: the ratio of total profit from winning trades to total loss from losing trades.'
             }
         },
         deals: {
