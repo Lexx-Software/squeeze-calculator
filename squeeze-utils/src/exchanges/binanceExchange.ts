@@ -88,8 +88,8 @@ export class BinanceExchange {
                 break;
             }
 
-            if (d[d.length - 1].openTime > to) {
-                d = d.filter((e) => e.openTime <= to);
+            if (d[d.length - 1][BinanceTickerNames.OPEN_TIME] > to) {
+                d = d.filter((e) => e[BinanceTickerNames.OPEN_TIME] <= to);
             }
 
             data = data.concat(d);

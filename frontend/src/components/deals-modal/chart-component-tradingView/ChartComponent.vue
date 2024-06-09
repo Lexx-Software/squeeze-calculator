@@ -4,14 +4,14 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import { TimeFrameToTVResolution, TradingViewDataFeed } from './tradingViewDataFeed';
+import { TradingViewDataFeed } from './tradingViewDataFeed';
 import { TradingViewDealsDisplay } from './tradingViewDealDisplay';
 import { ICalculatedResult } from '../../calculate';
 import {
     ChartingLibraryWidgetOptions,
     IChartingLibraryWidget,
     ResolutionString,
-    widget,
+    widget, Timezone
 } from '../../../assets/charting_library';
 
 @Options({
@@ -39,7 +39,8 @@ export default class DealsModal extends Vue {
             library_path: 'charting_library/',
             locale: 'en',
             datafeed: dataFeed,
-            theme: 'dark'
+            theme: 'dark',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone as Timezone
         };
 
         const tvWidget = new widget(widgetOptions);
