@@ -1,11 +1,12 @@
-@import '@/assets/style/base/vars.scss';
-
 .sq-calc-form {
     margin-top: 18px;
     .form {
         display: flex;
         justify-content: space-between;
         margin-bottom: 16px;
+        .el-select__selection {
+            min-width: 86px;
+        }
         .main-fields {
             margin-left: 20px;
         }
@@ -43,12 +44,27 @@
                     .el-form-item__label {
                         width: 100px !important;
                     }
+                    .warn-text {
+                        color: $yellow;
+                        font-size: 10px;
+                        position: absolute;
+                        white-space: nowrap;
+                        bottom: -19px;
+                        right: 0;
+                    }
+                }
+                .exchange-select {
+                    .el-select__selection {
+                        min-width: 146px;
+                    }
                 }
                 .short-input {
                     width: 100px;
                 }
-                .short-select .el-input {
-                    width: 100px;
+                .short-select {
+                    .el-select__selection {
+                        min-width: 66px;
+                    }
                 }
                 .is-tooltip {
                     .el-form-item__label {
@@ -118,7 +134,24 @@
     }
 }
 
-.el-dialog__body .text {
-    position: relative;
-    bottom: 20px;
+.el-dialog__body {
+    padding-top: 10px;
+    .deals-header-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-right: 40px;
+        position: relative;
+        bottom: 20px;
+        .title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .text {
+            font-size: 12px;
+        }
+    }
+    .chart {
+        height: 75vh;
+    }
 }

@@ -53,6 +53,7 @@ export default {
         calculating: 'Calculating',
         calculatedIn: 'Calculated in {value} seconds',
         max: 'Max.',
+        shortIsNotSupported: 'Short is not supported for Binance SPOT',
         algorithmTooltip: '● GRID - search by grid<br>● random - search randomly<br>● OMG - search in the vicinity of the previously found optimal solution',
         iterationsTooltip: 'The number of iterations of the search algorithm. The more iterations, <br>the more optimal values will be obtained as a result, but it also requires more time for calculation. <br>The optimal value of this parameter depends on the chosen time and your computer power.',
         saveResultsTooltip: 'The number of best results to be displayed in the resulting table.',
@@ -75,7 +76,8 @@ export default {
             time: "Time",
             tooltip: {
                 maxDrawdownPercent: 'Maximum position drawdown during a trade',
-                maxTimeInDealMins: 'Maximum time in a trade (minutes)'
+                maxTimeInDealMins: 'Maximum time in a trade (minutes)',
+                coeff: 'Profit-factor: the ratio of total profit from winning trades to total loss from losing trades.'
             }
         },
         deals: {
@@ -87,8 +89,10 @@ export default {
             priceExit: 'Exit price',
             profitPercent: 'Profit',
             stopLoss: 'Stoploss',
-            byTime: 'by time',
-            byPercent: 'by percent'
+            byTime: 'By time',
+            byPercent: 'By percent',
+            table: 'Table',
+            chart: 'Chart'
         }
     },
 };

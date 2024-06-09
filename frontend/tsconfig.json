@@ -37,6 +37,8 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/components/deals-modal/chart-component-stub/*.*",
+    "src/components/deals-modal/chart-component-tradingView/*.*",
   ]
 }

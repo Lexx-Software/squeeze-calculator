@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "install",
+			"path": "squeeze-utils",
+			"group": "clean",
+			"problemMatcher": [],
+			"label": "npm: install - squeeze-utils",
+			"detail": "install dependencies from package"
+		}
+	]
+}

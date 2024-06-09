@@ -77,23 +77,29 @@ export class BinanceExchange {
 
         while (currentDate < Date.now() - TimeFrameSeconds[timeFrame]) {
             await progressListener?.onProgressUpdated(currentDate - from, to - from);
-            const d = await this._doApiPublicRequest(this._settings.getKlinesPath, {
+            let d: IKline[] = await this._doApiPublicRequest(this._settings.getKlinesPath, {
                 symbol: symbol,
                 interval: timeFrame,
                 startTime: currentDate,
-                limit: MAX_KLINES_REQUEST_LENGTH
+                limit: this._settings.maxKlinesRequestLength
             });
-            data = data.concat(d);
 
-            if (data.length == 0) {
+            if (d.length == 0) {
                 break;
             }
 
+            if (d[d.length - 1][BinanceTickerNames.OPEN_TIME] > to) {
+                d = d.filter((e) => e[BinanceTickerNames.OPEN_TIME] <= to);
+            }
+
+            data = data.concat(d);
+
             let endTime = data[data.length - 1][BinanceTickerNames.OPEN_TIME]
+            currentDate = endTime + 1;
+
             if (currentDate > to) {
                 break;
             }
-            currentDate = endTime + 1;
         }
         await progressListener?.onProgressUpdated(to - from, to - from);
 

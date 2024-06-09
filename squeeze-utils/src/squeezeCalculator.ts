@@ -1,7 +1,7 @@
 import { IProgressListener } from "./iProgressListener";
 import { KlineBuilder } from "./klineBuilder";
-import { IKline } from "./types";
-import { floorFloat } from "./utils";
+import { IKline, IRange } from "./types";
+import { TimeFrameSeconds, deepCopy, floorFloat } from "./utils";
 
 
 export enum SqueezeBindings {
@@ -18,7 +18,6 @@ export interface ISqueezeDeal {
     timeExit: number;
     priceEnter: number;
     priceExit: number;
-    minPrice?: number;
     profitPercent: number;
     drawdownPercent: number;
     isTimeStopLoss?: boolean;
@@ -42,7 +41,7 @@ export interface ISqueezeDealsStatistic {
 export interface ISqueezeParameters {
     isShort: boolean;
     percentEnter: number;
-    percentExit: number;
+    percentExit: number | IRange;
     binding: SqueezeBindings;
     timeFrame: string;
     oncePerCandle: boolean;
@@ -57,12 +56,28 @@ interface IDirectionSettings {
     maxKeyName: 'low' | 'high'
 }
 
+
+interface ISqueezeCalculationContext {
+    percentExit: number;
+    exitPriceFactor: number;
+    deals: ISqueezeDeal[];
+    lockedTill: number;
+    currentSellPrice?: number;
+}
+
+interface IDealContext {
+    timeEnter: number;
+    priceEnter: number;
+    minPrice: number;
+}
+
 export class SqueezeCalculator {
     private _enterPriceFactor: number;
-    private _exitPriceFactor: number;
     private _stopLossPriceFactor: number;
     private _priceTickExpLevel: number;
+    private _oncePerCandleCurrentTime: number = 0;
     private _direction: IDirectionSettings;
+    private _resultsContext: ISqueezeCalculationContext[] = [];
 
     constructor(private _params: ISqueezeParameters, priceTick: number, private _commissionPercent: number) {
         if (_params.isShort) {
@@ -81,7 +96,6 @@ export class SqueezeCalculator {
         
         // optimization precalculations
         this._enterPriceFactor = (100 - this._direction.multiplier * _params.percentEnter) / 100;
-        this._exitPriceFactor = (100 + this._direction.multiplier * _params.percentExit) / 100;
         if (_params.stopLossPercent) {
             this._stopLossPriceFactor = (100 - this._direction.multiplier * _params.stopLossPercent) / 100;
         }
@@ -90,6 +104,27 @@ export class SqueezeCalculator {
             priceTick *= 10;
             this._priceTickExpLevel++;
         }
+
+        this._resultsContext = []
+        if (typeof _params.percentExit === 'number') {
+            this._addPercentExitForCalculations(_params.percentExit);
+        } else {
+            let percentExit = _params.percentExit.from;
+            while (percentExit <= _params.percentExit.to + 0.000000001) {
+                this._addPercentExitForCalculations(percentExit);
+                percentExit += 0.1;
+            }
+        }
+    }
+
+    private _addPercentExitForCalculations(percentExit: number): void {
+        percentExit = floorFloat(percentExit + Number.EPSILON, 1)
+        this._resultsContext.push({
+            percentExit: percentExit,
+            exitPriceFactor: (100 + this._direction.multiplier * percentExit) / 100,
+            deals: [],
+            lockedTill: 0
+        });
     }
 
     private _getKlineBindingPrice(binding: SqueezeBindings, kline: IKline): number {
@@ -101,14 +136,14 @@ export class SqueezeCalculator {
         return kline[binding];
     }
 
-    private _calculateBuyPriceForKline(kline: IKline): number {
+    private _calculateEnterPriceForKline(kline: IKline): number {
         const bindingPrice = this._getKlineBindingPrice(this._params.binding, kline);
         const buyPrice = bindingPrice * this._enterPriceFactor;
         return floorFloat(buyPrice, this._priceTickExpLevel);
     }
 
-    private _calculateSellPrice(buyPrice: number): number {
-        return floorFloat(buyPrice * this._exitPriceFactor, this._priceTickExpLevel);
+    private _calculateExitPrice(buyPrice: number, exitPriceFactor: number): number {
+        return floorFloat(buyPrice * exitPriceFactor, this._priceTickExpLevel);
     }
 
     private _calculateStopLossPrice(buyPrice: number): number|undefined {
@@ -119,68 +154,20 @@ export class SqueezeCalculator {
         return floorFloat(stopLossPrice, this._priceTickExpLevel);
     }
 
-    private _checkSellHappensInKline(kline: IKline, deal: ISqueezeDeal, sellPrice: number, stopLossPrice: number|undefined, sellBinding: string) {
-        if (kline[this._direction.minKeyName] < deal.minPrice) {
-            deal.minPrice = kline[this._direction.minKeyName];
-        }
-
-        // be pessimistic, first check stop-losses and then sell
-        if (stopLossPrice && kline[this._direction.minKeyName] <= stopLossPrice) {
-            if (this._params.stopOnKlineClosed && sellPrice < kline.close) {
-                deal.timeExit = kline.closeTime;
-                deal.priceExit = sellPrice;
-                return true;
-            }
-            // stop by price
-            deal.isPercentStopLoss = true;
-            deal.timeExit = kline.closeTime;
-            deal.priceExit = this._params.stopOnKlineClosed ? kline.close : stopLossPrice;
-            return true;
-        }
-
-        if (this._params.stopLossTime && kline.closeTime - deal.timeEnter > this._params.stopLossTime) {
-            // stop by time
-            deal.isTimeStopLoss = true;
-            deal.timeExit = kline.closeTime;
-            deal.priceExit = kline[this._direction.minKeyName];
-            return true;
-        }
-
-        if (kline[sellBinding] > sellPrice) {
-            // sell
-            deal.timeExit = kline.closeTime;
-            deal.priceExit = sellPrice;
-            return true;
-        }
-        return false
-    }
-
-    private _calculateDeal(klines: IKline[], i: number, buyPrice: number): {deal: ISqueezeDeal, index: number} {
+    private _buildDeal(dealContext: IDealContext, priceExit: number, timeExit: number, stopLossType?: 'price' | 'time'): ISqueezeDeal {
         const deal: ISqueezeDeal = {
-            timeEnter: klines[i].openTime,
-            timeExit: 0,
-            priceEnter: buyPrice,
-            priceExit: 0,
-            minPrice: buyPrice,
-            profitPercent: 0,
-            drawdownPercent: 0
+            timeEnter: dealContext.timeEnter,
+            timeExit: timeExit,
+            priceEnter: this._direction.multiplier * dealContext.priceEnter,
+            priceExit: this._direction.multiplier * priceExit,
+            profitPercent: undefined,
+            drawdownPercent: this._direction.multiplier * (dealContext.priceEnter - dealContext.minPrice) / dealContext.priceEnter * 100
         }
 
-        const sellPrice = this._calculateSellPrice(buyPrice);
-        const stopLossPrice = this._calculateStopLossPrice(buyPrice);
-
-        let isSold = this._checkSellHappensInKline(klines[i], deal, sellPrice, stopLossPrice, 'close')
-        i++
-
-        while (!isSold && i < klines.length) {
-            isSold = this._checkSellHappensInKline(klines[i], deal, sellPrice, stopLossPrice, this._direction.maxKeyName)
-            i++;
-        }
-
-        if (!isSold) {
-            // sell by current price if no more data
-            deal.timeExit = klines[klines.length - 1].closeTime
-            deal.priceExit = klines[klines.length - 1].close
+        if (stopLossType === 'price') {
+            deal.isPercentStopLoss = true;
+        } else if (stopLossType === 'time') {
+            deal.isTimeStopLoss = true;
         }
 
         if (this._params.isShort) {
@@ -189,24 +176,99 @@ export class SqueezeCalculator {
             deal.profitPercent = 100 / deal.priceEnter * deal.priceExit - 100 - (100 + 100 / deal.priceEnter * deal.priceExit) * this._commissionPercent / 100;
         }
 
-        deal.drawdownPercent = this._direction.multiplier * (deal.priceEnter - deal.minPrice) / deal.priceEnter * 100;
-        delete deal.minPrice;
-
-        deal.priceEnter *= this._direction.multiplier;
-        deal.priceExit *= this._direction.multiplier;
-
-        return {deal: deal, index: i}
+        return deal;
     }
 
-    calculate(klines: IKline[], klinesTf: string, progressBar?: IProgressListener): ISqueezeDealsStatistic {
+    private _calculateLockTime(timeExit: number) {
+        if (!this._params.oncePerCandle) {
+            return timeExit;
+        }
+
+        return Math.max(this._oncePerCandleCurrentTime, timeExit);
+    }
+
+    private _checkSellHappensInKline(kline: IKline, dealContext: IDealContext, contextIdx: number, stopLossPrice: number|undefined, sellBinding: string): number {
+        if (kline[this._direction.minKeyName] < dealContext.minPrice) {
+            dealContext.minPrice = kline[this._direction.minKeyName];
+        }
+
+        // be pessimistic, first check stop-losses and then sell
+        if (stopLossPrice && kline[this._params.stopOnKlineClosed ? 'close' : this._direction.minKeyName] <= stopLossPrice) {
+            // stop by price
+            const deal = this._buildDeal(dealContext, this._params.stopOnKlineClosed ? kline.close : stopLossPrice, kline.closeTime, 'price');
+            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
+                this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
+                this._resultsContext[contextIdx].deals.push(deal)
+                contextIdx++
+            }
+            return contextIdx;
+        }
+
+        if (this._params.stopLossTime && kline.closeTime - dealContext.timeEnter > this._params.stopLossTime) {
+            // stop by time
+            const deal = this._buildDeal(dealContext, kline[this._direction.minKeyName], kline.closeTime, 'time');
+            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
+                this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
+                this._resultsContext[contextIdx].deals.push(deal)
+                contextIdx++
+            }
+            return contextIdx;
+        }
+
+        while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice && this._resultsContext[contextIdx].currentSellPrice < kline[sellBinding]) {
+            const deal = this._buildDeal(dealContext, this._resultsContext[contextIdx].currentSellPrice, kline.closeTime);
+            this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
+            this._resultsContext[contextIdx].deals.push(deal)
+            contextIdx++
+        }
+        return contextIdx;
+    }
+
+    private _calculateDeals(klines: IKline[], i: number, buyPrice: number): void {
+        const dealContext: IDealContext = {
+            timeEnter: klines[i].openTime,
+            priceEnter: buyPrice,
+            minPrice: buyPrice,
+        }
+
+        for (const result of this._resultsContext) {
+            if (result.lockedTill < klines[i].openTime) {
+                result.currentSellPrice = this._calculateExitPrice(buyPrice, result.exitPriceFactor);
+            } else {
+                // the previous deal was not closed, do not start a new one
+                result.currentSellPrice = undefined;
+            }
+        }
+
+        const stopLossPrice = this._calculateStopLossPrice(buyPrice);
+
+        let contextIdx = 0;
+        contextIdx = this._checkSellHappensInKline(klines[i], dealContext, contextIdx, stopLossPrice, 'close')
+        i++
+
+        while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice && i < klines.length) {
+            contextIdx = this._checkSellHappensInKline(klines[i], dealContext, contextIdx, stopLossPrice, this._direction.maxKeyName)
+            i++;
+        }
+
+        // if positions are not closed, close them by the last kline price
+        if (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
+            const deal = this._buildDeal(dealContext, klines[klines.length - 1].close, klines[klines.length - 1].closeTime, 'time');
+            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
+                this._resultsContext[contextIdx].lockedTill = deal.timeExit;
+                this._resultsContext[contextIdx].deals.push(deal)
+                contextIdx++
+            }
+        }
+    }
+
+    calculate(klines: IKline[], klinesTf: string, progressBar?: IProgressListener): ISqueezeDealsStatistic[] {
         if (klines.length > 0 && klines[0].open * this._direction.multiplier < 0) {
             throw new Error(`The klines are not prepared for current direction. Please call invertKlines function before calculation`);
         }
 
-        let lastDeal: ISqueezeDeal = undefined;
         const klineBuilder = new KlineBuilder(this._params.timeFrame, klinesTf);
 
-        const deals: ISqueezeDeal[] = [];
         let nextBuyPrice: number = undefined;
         for (let i = 0; i < klines.length; i++) {
             progressBar?.onProgressUpdated(i, klines.length - 1)
@@ -214,34 +276,50 @@ export class SqueezeCalculator {
             const squeezeTfKline = klineBuilder.applyNewKline(klines[i]);
             const currentBuyPrice = nextBuyPrice;
             if (squeezeTfKline?.closed) {
-                nextBuyPrice = this._calculateBuyPriceForKline(squeezeTfKline);
+                nextBuyPrice = this._calculateEnterPriceForKline(squeezeTfKline);
+                this._oncePerCandleCurrentTime = undefined;
             }
 
-            // there is a deal in progress
-            if (lastDeal && lastDeal.timeExit >= kline.openTime) {
+            if (!currentBuyPrice) {
                 continue;
             }
 
-            // oncePerCandle logic
-            if (this._params.oncePerCandle && 
-                lastDeal && squeezeTfKline &&
-                lastDeal.timeExit >= squeezeTfKline.openTime) {
+            // there is a deal in progress
+            if (this._resultsContext[0].lockedTill >= kline.openTime) {
                 continue;
             }
 
             // check buy and sell
-            if (currentBuyPrice && kline[this._direction.minKeyName] < currentBuyPrice) {
-                const result = this._calculateDeal(klines, i, currentBuyPrice);
-                lastDeal = result.deal;
-                deals.push(result.deal);
+            if (kline[this._direction.minKeyName] < currentBuyPrice) {
+
+                // oncePerCandle logic
+                if (this._params.oncePerCandle && !this._oncePerCandleCurrentTime) {
+                    const ftMs = TimeFrameSeconds[this._params.timeFrame];
+                    // calculate the end of next kline
+                    this._oncePerCandleCurrentTime = Math.floor(kline.openTime / ftMs) * ftMs + ftMs - 1;
+                }
+
+                this._calculateDeals(klines, i, currentBuyPrice);
             }
         }
-        return this.calculateDealsStatistic(deals);
+
+        return this._calculateResultsDealsStatistic();
     }
 
-    calculateDealsStatistic(deals: ISqueezeDeal[]): ISqueezeDealsStatistic {
+    private _calculateResultsDealsStatistic(): ISqueezeDealsStatistic[] {
+        const result: ISqueezeDealsStatistic[] = [];
+        for (const resultContext of this._resultsContext) {
+            const settings = deepCopy(this._params);
+            settings.percentExit = resultContext.percentExit;
+            result.push(this.calculateDealsStatistic(resultContext.deals, settings));
+        }
+
+        return result;
+    }
+
+    calculateDealsStatistic(deals: ISqueezeDeal[], settings: ISqueezeParameters): ISqueezeDealsStatistic {
         const result: ISqueezeDealsStatistic = {
-            settings: this._params,
+            settings: settings,
             totalProfitPercent: 0,
             totalCumulativePercent: 100,
             totalDeals: deals.length,
@@ -268,7 +346,7 @@ export class SqueezeCalculator {
                 sumStops += d.profitPercent;
             }
 
-            if (d.isTimeStopLoss || d.isTimeStopLoss) {
+            if (d.isTimeStopLoss || d.isPercentStopLoss) {
                 result.numStopLossDeals += 1;
             }
 
