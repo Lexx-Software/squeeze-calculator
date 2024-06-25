@@ -192,10 +192,14 @@ export class SqueezeCalculator {
             dealContext.minPrice = kline[this._direction.minKeyName];
         }
 
-        // be pessimistic, first check stop-losses and then sell
+        // be pessimistic, first check stop-losses and then sells
         if (stopLossPrice && kline[this._params.stopOnKlineClosed ? 'close' : this._direction.minKeyName] <= stopLossPrice) {
             // stop by price
             const deal = this._buildDeal(dealContext, this._params.stopOnKlineClosed ? kline.close : stopLossPrice, kline.closeTime, 'price');
+            if (!this._params.stopOnKlineClosed) {
+                // update drawdownPercent because stoploss happens on the minimal price
+                deal.drawdownPercent = this._params.stopLossPercent;
+            }
             while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
                 this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
                 this._resultsContext[contextIdx].deals.push(deal)
