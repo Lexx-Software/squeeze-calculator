@@ -40,6 +40,7 @@ export default {
         minCoeff: 'Minimum profit/loss coeff',
         minWinRate: 'Minimum winrate',
         maxSellBuyRatio: 'Max SELL/BUY ratio',
+        parallelSqueeze: 'Parallel squeeze',
         optimizationSettings: 'Optimization settings',
         algorithm: 'Algorithm',
         iterations: 'Iterations',

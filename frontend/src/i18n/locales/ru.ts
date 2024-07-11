@@ -40,6 +40,7 @@ export default {
         minCoeff: 'Мин. коеф. прибыли/убытка',
         minWinRate: 'Мин. винрейт',
         maxSellBuyRatio: 'Макс. SELL/BUY ratio',
+        parallelSqueeze: 'Параллельный сквиз',
         optimizationSettings: 'Настройки оптимизации',
         algorithm: 'Алгоритм',
         iterations: 'Итерации',

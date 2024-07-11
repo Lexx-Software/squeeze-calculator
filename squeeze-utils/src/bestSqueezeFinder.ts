@@ -12,6 +12,7 @@ export interface ISqueezeOptimizationsParameters {
     stopLossTime?: IRange; // mins
     stopLossPercent?: IRange;
     stopOnKlineClosed?: boolean;
+    parallelSqueeze?: boolean;
     timeFrame: string;
     oncePerCandle: boolean;
     algorithm: OptimizationAlgorithm;
@@ -129,7 +130,8 @@ export class BestSqueezeFinder {
             stopLossPercent: x[3] ? x[3] / PERCENT_ACCURACY : undefined,
             stopOnKlineClosed: this._params.stopOnKlineClosed,
             timeFrame: this._params.timeFrame,
-            oncePerCandle: this._params.oncePerCandle
+            oncePerCandle: this._params.oncePerCandle,
+            parallelSqueeze: this._params.parallelSqueeze
         }
         await this._progressBar?.onProgressUpdated(this._currentIteration++, this._numIterations)
 

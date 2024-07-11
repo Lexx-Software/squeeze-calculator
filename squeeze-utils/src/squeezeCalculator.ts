@@ -45,6 +45,7 @@ export interface ISqueezeParameters {
     binding: SqueezeBindings;
     timeFrame: string;
     oncePerCandle: boolean;
+    parallelSqueeze?: boolean;
     stopLossTime?: number;
     stopLossPercent?: number;
     stopOnKlineClosed?: boolean;
@@ -180,6 +181,11 @@ export class SqueezeCalculator {
     }
 
     private _calculateLockTime(timeExit: number) {
+        if (this._params.parallelSqueeze) {
+            timeExit = Math.min(this._oncePerCandleCurrentTime, timeExit);
+            console.log(timeExit);
+        }
+
         if (!this._params.oncePerCandle) {
             return timeExit;
         }
@@ -297,7 +303,7 @@ export class SqueezeCalculator {
             if (kline[this._direction.minKeyName] < currentBuyPrice) {
 
                 // oncePerCandle logic
-                if (this._params.oncePerCandle && !this._oncePerCandleCurrentTime) {
+                if ((this._params.oncePerCandle || this._params.parallelSqueeze) && !this._oncePerCandleCurrentTime) {
                     const ftMs = TimeFrameSeconds[this._params.timeFrame];
                     // calculate the end of next kline
                     this._oncePerCandleCurrentTime = Math.floor(kline.openTime / ftMs) * ftMs + ftMs - 1;

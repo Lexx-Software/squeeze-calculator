@@ -247,6 +247,14 @@
                 />
               </el-form-item>
             </div>
+
+            <div class="block">
+              <el-form-item class="is-active-checkbox">
+                <el-checkbox v-model="calcForm.parallelSqueeze" />
+              </el-form-item>
+              <el-form-item :label="`${$t('main.parallelSqueeze')}`">
+              </el-form-item>
+            </div>
           </div>
 
           <!-- OPTIMIZATION -->
@@ -578,6 +586,7 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
       isActive: false,
       value: 0.5,
     },
+    parallelSqueeze: false,
     algorithm: OptimizationAlgorithm.RANDOM,
     downloadTimeFrame: '1m',
     iterations: 3000,
@@ -723,7 +732,8 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
         oncePerCandle: formData.oncePerCandle,
         binding,
         algorithm: formData.algorithm,
-        iterations: formData.iterations
+        iterations: formData.iterations,
+        parallelSqueeze: formData.parallelSqueeze
     }
     if (formData.stopLossTime.isActive) {
         settings.stopLossTime = {
