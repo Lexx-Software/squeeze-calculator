@@ -118,21 +118,21 @@
 
             <div class="block">
               <el-form-item :label="`${$t('main.percentEnter')}:`" prop="percentEnterFrom">
-                <el-input-number v-model="calcForm.percentEnterFrom" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
+                <el-input-number v-model="calcForm.percentEnterFrom" :precision="1" :step="0.1" :min="0.2" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
               <el-form-item prop="percentEnterTo">
-                <el-input-number v-model="calcForm.percentEnterTo" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
+                <el-input-number v-model="calcForm.percentEnterTo" :precision="1" :step="0.1" :min="0.2" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
             </div>
 
             <div class="block">
               <el-form-item :label="`${$t('main.percentExit')}:`" prop="percentExitFrom">
-                <el-input-number v-model="calcForm.percentExitFrom" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
+                <el-input-number v-model="calcForm.percentExitFrom" :precision="1" :step="0.1" :min="0.2" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
               <span class="separator" />
               <el-form-item prop="percentExitTo">
-                <el-input-number v-model="calcForm.percentExitTo" :precision="1" :step="0.1" :min="0.5" @change="ispercentEnterSellWasManuallySet = true" />
+                <el-input-number v-model="calcForm.percentExitTo" :precision="1" :step="0.1" :min="0.2" @change="ispercentEnterSellWasManuallySet = true" />
               </el-form-item>
             </div>
 
