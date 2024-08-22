@@ -1,9 +1,9 @@
 import {
     BestSqueezeFinder,
     ISqueezeOptimizationsParameters,
-    BinanceExchange,
     IProgressListener,
     IKline,
+    buildExchange,
     ISqueezeDealsStatistic
 } from 'squeeze-utils';
 
@@ -80,7 +80,7 @@ export async function calculateData(formData: any, settings: ISqueezeOptimizatio
 
     const klinesCacheName = `${formData.exchange}_${symbol}_${klinesTimeFrame}_${from}_${to}`;
     if (klinesCache.name !== klinesCacheName) {
-        const exchange = new BinanceExchange(formData.exchange);
+        const exchange = buildExchange(formData.exchange);
         klinesCache.klines = await exchange.downloadKlines(symbol, klinesTimeFrame, from, to, progressBar);
         klinesCache.tickers = await exchange.getSymbolsTickers();
         klinesCache.name = klinesCacheName;

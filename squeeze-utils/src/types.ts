@@ -21,3 +21,7 @@ export interface IRange {
     from: number;
     to: number;
 }
+
+export interface  ISymbolsTicker {
+    [symbol: string]: number
+}

@@ -1,6 +1,6 @@
-import { BestSqueezeFinder, ISqueezeOptimizationsParameters, OptimizationAlgorithm, BinanceExchange,
+import { BestSqueezeFinder, ISqueezeOptimizationsParameters,
          IProgressListener, ISqueezeParameters, SqueezeBindings, SqueezeCalculator, 
-         invertKlines} from "squeeze-utils";
+         invertKlines, buildExchange, Exchange} from "squeeze-utils";
 
 class ProgressBar implements IProgressListener {
     private _startTime: number;
@@ -38,7 +38,7 @@ async function findBestSqueeze(symbol: string, from: number, to: number, commiss
     const progressBar = new ProgressBar();
 
     console.log('Starting downloading data...')
-    const exchange = new BinanceExchange('binance')
+    const exchange = buildExchange(Exchange.BINANCE)
     const klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
@@ -54,11 +54,11 @@ async function findBestSqueeze(symbol: string, from: number, to: number, commiss
     console.log('Result:\n%s', JSON.stringify(bestStat, null, 2));
 }
 
-async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: string, from: number, to: number, commissionPercent: number, params: ISqueezeParameters) {
+async function calculateOne(exchangeName: Exchange, symbol: string, from: number, to: number, params: ISqueezeParameters) {
     const progressBar = new ProgressBar();
 
     console.log('Starting downloading data...')
-    const exchange = new BinanceExchange(exchangeName)
+    const exchange = buildExchange(exchangeName)
     let klines = await exchange.downloadKlines(symbol, '1m', from, to, progressBar);
     const symbolsTickers = await exchange.getSymbolsTickers();
     console.log('Downloaded in %s seconds', progressBar.getSpentSeconds().toFixed(3))
@@ -66,7 +66,7 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
     if (params.isShort) {
         klines = invertKlines(klines);
     }
-    const squeezeCalculator = new SqueezeCalculator(params, symbolsTickers[symbol], commissionPercent);
+    const squeezeCalculator = new SqueezeCalculator(params, symbolsTickers[symbol], exchange.getDefaultCommission());
     const stat = squeezeCalculator.calculate(klines, '1m');
 
     console.log('Result:\n%s', JSON.stringify(stat, null, 2));
@@ -74,7 +74,7 @@ async function calculateOne(exchangeName: 'binance'|'binance-futures', symbol: s
 
 
 // Example how to get the statistic for special config
-calculateOne('binance', 'SOLBTC', 1703768400000, 1703854800000, 0.075, {
+calculateOne(Exchange.OKX, 'BTC-USDT', 1723672800000, 1724104800000, {
     isShort: false,
     percentEnter: 1.1,
     percentExit: {

@@ -17,7 +17,7 @@ export default class BrowserLinks extends Vue {
             timeframe: data.timeFrame
         });
 
-        let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol}&tu=1`;
+        let link = `https://${subDomain}lexx-trade.com/strategy?utm_source=squeeze_calculator#t=s&s=${data.exchange}:${data.symbol.replace('-', '')}&tu=1`;
         // time frame
         link += `&tf=${data.timeFrame}`;
         // binding

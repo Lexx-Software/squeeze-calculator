@@ -1,11 +1,14 @@
 {
     "cSpell.words": [
         "coeff",
+        "Dutc",
         "fapi",
         "hpjs",
         "Klines",
         "optimjs",
-        "quniform"
+        "preopen",
+        "quniform",
+        "Wutc"
     ],
     "files.exclude": {
         "**/.git": true,
