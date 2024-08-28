@@ -4,5 +4,6 @@ export * from './iProgressListener';
 export * from './squeezeCalculator';
 export * from './types';
 export * from './utils';
-export * from './exchanges/binanceExchange';
 export * from './optimization';
+export * from './exchanges/baseExchange';
+export * from './exchanges/buildExchange';

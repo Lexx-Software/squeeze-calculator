@@ -1,64 +1,77 @@
 const bent = require('bent')
 const queryString = require('query-string');
-import { IKeyValueObject, IKline } from '../types';
-import { TimeFrameSeconds, removeUndefined } from '../utils';
+import { IKeyValueObject, IKline, ISymbolsTicker } from '../types';
+import { removeUndefined, sleep } from '../utils';
 import { IBinanceExchangeInfo, BinanceTickerNames, ISymbolPriceFilter } from './binanceTypes';
-import { IProgressListener } from '../iProgressListener';
+import { BaseExchange, Exchange, IExchangeSettings } from './baseExchange';
 
-
-export interface ISymbolsTicker {
-    [symbol: string]: number
-}
-
-interface IBinanceExchangeSettings {
+interface IBinanceExchangeSettings extends IExchangeSettings {
     baseUrl: string;
     exchangeInfoPath: string;
     getKlinesPath: string;
-    maxKlinesRequestLength: number;
 }
 
 const exchangeSettings: {[name: string]: IBinanceExchangeSettings} = {
-    binance: {
+    [Exchange.BINANCE]: {
         baseUrl: 'https://api.binance.com/',
         exchangeInfoPath: 'api/v3/exchangeInfo',
         getKlinesPath: 'api/v3/klines',
-        maxKlinesRequestLength: 1000
+        maxNumKlinesInRequest: 1000,
+        makerCommission: 0.075,
+        numKlinesParallelDownloads: 5
     },
-    'binance-futures': {
+    [Exchange.BINANCE_FUTURES]: {
         baseUrl: 'https://fapi.binance.com/',
         exchangeInfoPath: 'fapi/v1/exchangeInfo',
         getKlinesPath: 'fapi/v1/klines',
-        maxKlinesRequestLength: 1500
+        maxNumKlinesInRequest: 1000,
+        makerCommission: 0.02,
+        numKlinesParallelDownloads: 5
     }
 }
 
-const MAX_KLINES_REQUEST_LENGTH = 1000;
-
-export class BinanceExchange {
+export class BinanceExchange extends BaseExchange {
     private _getRequest: any;
-    private _settings: IBinanceExchangeSettings;
+    private _binanceSettings: IBinanceExchangeSettings;
 
-    constructor(exchange: 'binance' | 'binance-futures') {
-        this._settings = exchangeSettings[exchange];
-        if (!this._settings) {
+    constructor(exchange: Exchange.BINANCE | Exchange.BINANCE_FUTURES) {
+        super(exchangeSettings[exchange])
+        this._binanceSettings = exchangeSettings[exchange];
+        if (!this._binanceSettings) {
             throw new Error(`Unknown exchange ${exchange}`)
         }
-        this._getRequest = bent(this._settings.baseUrl, 'GET', 'json');
+        this._getRequest = bent(this._binanceSettings.baseUrl, 'GET', 'json');
     }
 
-    async _doApiPublicRequest(path: string, params?: IKeyValueObject): Promise<any> {
+    async _doApiPublicRequest<T>(path: string, params?: IKeyValueObject): Promise<T> {
         if (params) {
             path += '?' + queryString.stringify(removeUndefined(params));
         }
-        return await this._getRequest(path);
+
+        let tries = 10;
+
+        while (tries--) {
+            try {
+                return await this._getRequest(path);
+            }
+            catch (e) {
+                if (e.statusCode === 429 || e.statusCode === 418) {
+                    await sleep(5 * 1000);
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw new Error('Max request tries reached');
     }
 
-    async getSymbolsInfo(): Promise<IBinanceExchangeInfo> {
-        return await this._doApiPublicRequest(this._settings.exchangeInfoPath)
+
+    private async _getSymbolsInfo(): Promise<IBinanceExchangeInfo> {
+        return await this._doApiPublicRequest(this._binanceSettings.exchangeInfoPath)
     }
 
     async getSymbolsTickers(): Promise<ISymbolsTicker> {
-        const symbolsInfo = await this.getSymbolsInfo();
+        const symbolsInfo = await this._getSymbolsInfo();
         const result: ISymbolsTicker = {};
         for (const symbolInfo of symbolsInfo.symbols) {
             const priceFilter = symbolInfo.filters.find(f => f.filterType == 'PRICE_FILTER') as ISymbolPriceFilter;
@@ -70,38 +83,13 @@ export class BinanceExchange {
         return result;
     }
 
-    async downloadKlines(symbol: string, timeFrame: string, from: number, to?: number, progressListener?: IProgressListener): Promise<IKline[]> {
-        to = to || Date.now()
-        let data = []
-        let currentDate = from;
-
-        while (currentDate < Date.now() - TimeFrameSeconds[timeFrame]) {
-            await progressListener?.onProgressUpdated(currentDate - from, to - from);
-            let d: IKline[] = await this._doApiPublicRequest(this._settings.getKlinesPath, {
-                symbol: symbol,
-                interval: timeFrame,
-                startTime: currentDate,
-                limit: this._settings.maxKlinesRequestLength
-            });
-
-            if (d.length == 0) {
-                break;
-            }
-
-            if (d[d.length - 1][BinanceTickerNames.OPEN_TIME] > to) {
-                d = d.filter((e) => e[BinanceTickerNames.OPEN_TIME] <= to);
-            }
-
-            data = data.concat(d);
-
-            let endTime = data[data.length - 1][BinanceTickerNames.OPEN_TIME]
-            currentDate = endTime + 1;
-
-            if (currentDate > to) {
-                break;
-            }
-        }
-        await progressListener?.onProgressUpdated(to - from, to - from);
+    protected async _getKlines(symbol: string, timeFrame: string, limit: number, from: number): Promise<IKline[]> {
+        const data = await this._doApiPublicRequest<any[]>(this._binanceSettings.getKlinesPath, {
+            symbol: symbol,
+            interval: timeFrame,
+            startTime: from,
+            limit: limit
+        });
 
         return data.map(d => ({
             openTime: d[BinanceTickerNames.OPEN_TIME],

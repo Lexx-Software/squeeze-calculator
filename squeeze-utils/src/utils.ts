@@ -104,3 +104,7 @@ export function deepCopy<T>(o: T): T {
     }
     return newO;
 }
+
+export function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

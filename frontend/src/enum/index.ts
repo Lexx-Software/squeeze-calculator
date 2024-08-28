@@ -1,11 +1,12 @@
-export const EXCHANGE = {
-    BINANCE: 'binance',
-    BINANCE_FUTURES: 'binance-futures',
-};
+import {
+    Exchange
+} from 'squeeze-utils';
 
 export const EXCHANGE_TEXT = {
-    [EXCHANGE.BINANCE]: 'Binance',
-    [EXCHANGE.BINANCE_FUTURES]: 'Binance Futures',
+    [Exchange.BINANCE]: 'Binance',
+    [Exchange.BINANCE_FUTURES]: 'Binance Futures',
+    [Exchange.OKX]: 'OKX',
+    [Exchange.OKX_FUTURES]: 'OKX Perpetual Futures',
 };
 
 export const TIMEFRAME_PERC_SETTINGS = {

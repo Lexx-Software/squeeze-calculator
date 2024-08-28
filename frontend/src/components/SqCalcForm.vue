@@ -21,12 +21,20 @@
               <el-form-item :label="`${$t('main.exchange')}:`">
                 <el-select class="exchange-select" v-model="calcForm.exchange" @change="(e) => getSymbols(e)">
                     <el-option
-                        :label="EXCHANGE_TEXT[EXCHANGE.BINANCE]"
-                        :value="EXCHANGE.BINANCE"
+                        :label="EXCHANGE_TEXT[Exchange.BINANCE]"
+                        :value="Exchange.BINANCE"
                     />
                     <el-option
-                        :label="EXCHANGE_TEXT[EXCHANGE.BINANCE_FUTURES]"
-                        :value="EXCHANGE.BINANCE_FUTURES"
+                        :label="EXCHANGE_TEXT[Exchange.BINANCE_FUTURES]"
+                        :value="Exchange.BINANCE_FUTURES"
+                    />
+                    <el-option
+                        :label="EXCHANGE_TEXT[Exchange.OKX]"
+                        :value="Exchange.OKX"
+                    />
+                    <el-option
+                        :label="EXCHANGE_TEXT[Exchange.OKX_FUTURES]"
+                        :value="Exchange.OKX_FUTURES"
                     />
                 </el-select>
               </el-form-item>
@@ -52,7 +60,7 @@
                     <el-option :label="'Long'" :value="false"/>
                     <el-option :label="'Short'" :value="true"/>
                 </el-select>
-                <span v-if="calcForm.isShort && calcForm.exchange === EXCHANGE.BINANCE" class="warn-text">
+                <span v-if="calcForm.isShort && (calcForm.exchange === Exchange.BINANCE || calcForm.exchange === Exchange.OKX)" class="warn-text">
                     {{ $t('main.shortIsNotSupported') }}
                 </span>
               </el-form-item>
@@ -479,7 +487,7 @@
                     type="primary"
                     link
                     @click="createStrategyLink(scope.row)"
-                    :disabled="scope.row.isShort && scope.row.exchange === EXCHANGE.BINANCE"
+                    :disabled="scope.row.isShort && (scope.row.exchange === Exchange.BINANCE || scope.row.exchange === Exchange.OKX)"
                 >
                     {{ $t('main.table.create') }}
                 </el-button>
@@ -499,7 +507,7 @@ import i18n from '@/i18n';
 import type { FormRules, FormInstance } from 'element-plus';
 import en from 'element-plus/dist/locale/en.mjs';
 import ru from 'element-plus/dist/locale/ru.mjs';
-import { EXCHANGE, EXCHANGE_TEXT, TIMEFRAME_PERC_SETTINGS } from '../enum';
+import { EXCHANGE_TEXT, TIMEFRAME_PERC_SETTINGS } from '../enum';
 import { calculateData, ICalculatedResult } from './calculate';
 import DealsModal from './deals-modal/DealsModal.vue';
 import BrowserLinks from './sq-calc-form-mixins/BrowserLinks';
@@ -507,10 +515,11 @@ import TableData from './sq-calc-form-mixins/TableData';
 import {
   OptimizationAlgorithm,
   SqueezeBindings,
-  BinanceExchange,
+  buildExchange,
   TimeFrameSeconds,
   BestSqueezeFinder,
   ISqueezeOptimizationsParameters,
+  Exchange
 } from 'squeeze-utils';
 
 const { t } = i18n.global;
@@ -519,7 +528,7 @@ const { t } = i18n.global;
     components: { DealsModal },
 })
 export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
-  EXCHANGE = EXCHANGE;
+  Exchange = Exchange;
   EXCHANGE_TEXT = EXCHANGE_TEXT;
   OptimizationAlgorithm = OptimizationAlgorithm;
   SqueezeBindings = SqueezeBindings;
@@ -533,7 +542,7 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
   calcForm: any = {}
   defaultFormData = {
     isShort: false,
-    exchange: EXCHANGE.BINANCE,
+    exchange: Exchange.BINANCE,
     fee: 0.075,
     symbol: 'BTCUSDT',
     timeframe: '1m',
@@ -785,15 +794,19 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
   symbolsList = [];
 
   async getSymbols(exchange) {
-    this.calcForm.fee = exchange === EXCHANGE.BINANCE ? 0.075 : 0.02;
-    
-    const exchangeData = new BinanceExchange(exchange);
+    const exchangeData = buildExchange(exchange);
+    this.calcForm.fee = exchangeData.getDefaultCommission()
+
     const tickers = await exchangeData.getSymbolsTickers();
     const result = [];
     for (const key of Object.keys(tickers)) {
       result.push({ value: key });
     }
     this.symbolsList = result;
+
+    if (!tickers[this.calcForm.symbol] && result.length > 0) {
+      this.calcForm.symbol = result[0].value;
+    }
   }
 
   querySearchSymbol(queryString, cb) {
