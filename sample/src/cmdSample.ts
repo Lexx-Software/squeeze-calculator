@@ -74,17 +74,17 @@ async function calculateOne(exchangeName: Exchange, symbol: string, from: number
 
 
 // Example how to get the statistic for special config
-calculateOne(Exchange.OKX, 'BTC-USDT', 1723672800000, 1724104800000, {
+calculateOne(Exchange.BINANCE_FUTURES, 'MORPHOUSDT', 1732662000000, 1733007600000, {
     isShort: false,
-    percentEnter: 1.1,
+    percentEnter: 4.5,
     percentExit: {
-        from: 0.5,
-        to: 3.0
+        from: 1.7,
+        to: 1.9
     },
     binding: SqueezeBindings.CLOSE,
-    stopLossTime: undefined,
-    timeFrame: '5m',
-    oncePerCandle: true
+    stopLossTime: 255 * 60 * 1000,
+    timeFrame: '1h',
+    oncePerCandle: false
 });
 
 /*
