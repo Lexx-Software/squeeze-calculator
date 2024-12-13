@@ -78,6 +78,7 @@ export class SqueezeCalculator {
     private _oncePerCandleCurrentTime: number = 0;
     private _direction: IDirectionSettings;
     private _resultsContext: ISqueezeCalculationContext[] = [];
+    private _globalLockedTillTime: number = 0;
 
     constructor(private _params: ISqueezeParameters, priceTick: number, private _commissionPercent: number) {
         if (_params.isShort) {
@@ -187,7 +188,8 @@ export class SqueezeCalculator {
         return Math.max(this._oncePerCandleCurrentTime, timeExit);
     }
 
-    private _checkSellHappensInKline(kline: IKline, dealContext: IDealContext, contextIdx: number, stopLossPrice: number|undefined, sellBinding: string): number {
+    private _checkSellHappensInKline(kline: IKline, dealContext: IDealContext, checkContexts: ISqueezeCalculationContext[],
+                                     checkDealsIndex: number, stopLossPrice: number|undefined, sellBinding: string): number {
         if (kline[this._direction.minKeyName] < dealContext.minPrice) {
             dealContext.minPrice = kline[this._direction.minKeyName];
         }
@@ -200,32 +202,32 @@ export class SqueezeCalculator {
                 // update drawdownPercent because stoploss happens on the minimal price
                 deal.drawdownPercent = this._params.stopLossPercent;
             }
-            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
-                this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
-                this._resultsContext[contextIdx].deals.push(deal)
-                contextIdx++
+            while (checkDealsIndex < checkContexts.length) {
+                checkContexts[checkDealsIndex].lockedTill = this._calculateLockTime(deal.timeExit);
+                checkContexts[checkDealsIndex].deals.push(deal)
+                checkDealsIndex++
             }
-            return contextIdx;
+            return checkDealsIndex;
         }
 
         if (this._params.stopLossTime && kline.closeTime - dealContext.timeEnter > this._params.stopLossTime) {
             // stop by time
             const deal = this._buildDeal(dealContext, kline[this._direction.minKeyName], kline.closeTime, 'time');
-            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
-                this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
-                this._resultsContext[contextIdx].deals.push(deal)
-                contextIdx++
+            while (checkDealsIndex < checkContexts.length && checkContexts[checkDealsIndex].currentSellPrice) {
+                checkContexts[checkDealsIndex].lockedTill = this._calculateLockTime(deal.timeExit);
+                checkContexts[checkDealsIndex].deals.push(deal)
+                checkDealsIndex++
             }
-            return contextIdx;
+            return checkDealsIndex;
         }
 
-        while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice && this._resultsContext[contextIdx].currentSellPrice < kline[sellBinding]) {
-            const deal = this._buildDeal(dealContext, this._resultsContext[contextIdx].currentSellPrice, kline.closeTime);
-            this._resultsContext[contextIdx].lockedTill = this._calculateLockTime(deal.timeExit);
-            this._resultsContext[contextIdx].deals.push(deal)
-            contextIdx++
+        while (checkDealsIndex < checkContexts.length && checkContexts[checkDealsIndex].currentSellPrice < kline[sellBinding]) {
+            const deal = this._buildDeal(dealContext, checkContexts[checkDealsIndex].currentSellPrice, kline.closeTime);
+            checkContexts[checkDealsIndex].lockedTill = this._calculateLockTime(deal.timeExit);
+            checkContexts[checkDealsIndex].deals.push(deal)
+            checkDealsIndex++
         }
-        return contextIdx;
+        return checkDealsIndex;
     }
 
     private _calculateDeals(klines: IKline[], i: number, buyPrice: number): void {
@@ -235,9 +237,11 @@ export class SqueezeCalculator {
             minPrice: buyPrice,
         }
 
+        const checkContexts = [];
         for (const result of this._resultsContext) {
             if (result.lockedTill < klines[i].openTime) {
                 result.currentSellPrice = this._calculateExitPrice(buyPrice, result.exitPriceFactor);
+                checkContexts.push(result);
             } else {
                 // the previous deal was not closed, do not start a new one
                 result.currentSellPrice = undefined;
@@ -246,22 +250,30 @@ export class SqueezeCalculator {
 
         const stopLossPrice = this._calculateStopLossPrice(buyPrice);
 
-        let contextIdx = 0;
-        contextIdx = this._checkSellHappensInKline(klines[i], dealContext, contextIdx, stopLossPrice, 'close')
+        let checkDealsIndex = 0;
+        checkDealsIndex = this._checkSellHappensInKline(klines[i], dealContext, checkContexts, checkDealsIndex, stopLossPrice, 'close')
         i++
 
-        while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice && i < klines.length) {
-            contextIdx = this._checkSellHappensInKline(klines[i], dealContext, contextIdx, stopLossPrice, this._direction.maxKeyName)
+        while (checkDealsIndex < checkContexts.length && i < klines.length) {
+            checkDealsIndex = this._checkSellHappensInKline(klines[i], dealContext, checkContexts, checkDealsIndex, stopLossPrice, this._direction.maxKeyName)
             i++;
         }
 
         // if positions are not closed, close them by the last kline price
-        if (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
+        if (checkDealsIndex < checkContexts.length) {
             const deal = this._buildDeal(dealContext, klines[klines.length - 1].close, klines[klines.length - 1].closeTime, 'time');
-            while (contextIdx < this._resultsContext.length && this._resultsContext[contextIdx].currentSellPrice) {
-                this._resultsContext[contextIdx].lockedTill = deal.timeExit;
-                this._resultsContext[contextIdx].deals.push(deal)
-                contextIdx++
+            while (checkDealsIndex < checkContexts.length && checkContexts[checkDealsIndex].currentSellPrice) {
+                checkContexts[checkDealsIndex].lockedTill = deal.timeExit;
+                checkContexts[checkDealsIndex].deals.push(deal)
+                checkDealsIndex++
+            }
+        }
+
+        // calculate global lock time
+        this._globalLockedTillTime = this._resultsContext[0].lockedTill;
+        for (const result of this._resultsContext) {
+            if (this._globalLockedTillTime > result.lockedTill) {
+                this._globalLockedTillTime = result.lockedTill;
             }
         }
     }
@@ -279,6 +291,7 @@ export class SqueezeCalculator {
             const kline = klines[i];
             const squeezeTfKline = klineBuilder.applyNewKline(klines[i]);
             const currentBuyPrice = nextBuyPrice;
+
             if (squeezeTfKline?.closed) {
                 nextBuyPrice = this._calculateEnterPriceForKline(squeezeTfKline);
                 this._oncePerCandleCurrentTime = undefined;
@@ -288,8 +301,8 @@ export class SqueezeCalculator {
                 continue;
             }
 
-            // there is a deal in progress
-            if (this._resultsContext[0].lockedTill >= kline.openTime) {
+            // all deals are in progress
+            if (this._globalLockedTillTime >= kline.openTime) {
                 continue;
             }
 

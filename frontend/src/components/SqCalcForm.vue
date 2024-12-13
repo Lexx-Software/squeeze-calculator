@@ -581,7 +581,7 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
     },
     minWinRate: {
       isActive: false,
-      value: 0,
+      value: 1.0,
     },
     maxSellBuyRatio: {
       isActive: false,
