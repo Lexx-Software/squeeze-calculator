@@ -25,7 +25,7 @@ export class OkxExchange extends BaseExchange {
             maxNumKlinesInRequest: MAX_KLINES_REQUEST_LENGTH,
             numKlinesParallelDownloads: 3
         })
-        this._getRequest = bent('https://aws.okx.com', 'GET', 'json');
+        this._getRequest = bent('https://www.okx.com', 'GET', 'json');
     }
 
     async _doOkxApiPublicRequest<T>(path: string, params?: IKeyValueObject): Promise<T> {
