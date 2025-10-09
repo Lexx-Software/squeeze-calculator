@@ -1,5 +1,10 @@
 import { IKeyValueObject, IKline } from "./types";
 
+export const SEC_MS = 1000;
+export const MIN_MS = 60 * SEC_MS;
+export const HOUR_MS = 60 * MIN_MS;
+export const DAY_MS = 24 * HOUR_MS;
+
 export const TimeFrameSeconds = {
     '1m' : 60 * 1000,
     '3m' : 3 * 60 * 1000,
@@ -107,4 +112,45 @@ export function deepCopy<T>(o: T): T {
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function getPrecision(num: number): number {
+    // Convert to string and handle scientific notation
+    const str = num.toString();
+    const eIndex = str.indexOf('e');
+    
+    // Handle scientific notation
+    if (eIndex !== -1) {
+        const base = str.substring(0, eIndex);
+        const exp = parseInt(str.substring(eIndex + 1));
+        const dotIndex = base.indexOf('.');
+        if (dotIndex === -1) return 0;
+        
+        const precision = base.length - dotIndex - 1 - exp;
+        return precision > 0 ? precision : 0;
+    }
+
+    // Handle regular decimal
+    const dotIndex = str.indexOf('.');
+    return dotIndex === -1 ? 0 : str.length - dotIndex - 1;
+}
+
+
+function getMaxPrecision(numbers: number[]): number {
+    return Math.max(...numbers.map(getPrecision));
+}
+
+export function getKlinesPricePrecision(klines: IKline[]): number {
+    // Pre-allocate array size for better performance
+    const prices = new Array(klines.length * 4);
+    let i = 0;
+    
+    for (const kline of klines) {
+        prices[i++] = kline.open;
+        prices[i++] = kline.close; 
+        prices[i++] = kline.high;
+        prices[i++] = kline.low;
+    }
+    
+    return getMaxPrecision(prices);
 }

@@ -1,7 +1,7 @@
 import { IProgressListener } from "./iProgressListener";
 import { KlineBuilder } from "./klineBuilder";
 import { IKline, IRange } from "./types";
-import { TimeFrameSeconds, deepCopy, floorFloat } from "./utils";
+import { DAY_MS, TimeFrameSeconds, deepCopy, floorFloat, getKlinesPricePrecision } from "./utils";
 
 
 export enum SqueezeBindings {
@@ -75,6 +75,7 @@ export class SqueezeCalculator {
     private _enterPriceFactor: number;
     private _stopLossPriceFactor: number;
     private _priceTickExpLevel: number;
+    private _calculatedPriceTickExpLevel: number = 0;
     private _oncePerCandleCurrentTime: number = 0;
     private _direction: IDirectionSettings;
     private _resultsContext: ISqueezeCalculationContext[] = [];
@@ -140,11 +141,11 @@ export class SqueezeCalculator {
     private _calculateEnterPriceForKline(kline: IKline): number {
         const bindingPrice = this._getKlineBindingPrice(this._params.binding, kline);
         const buyPrice = bindingPrice * this._enterPriceFactor;
-        return floorFloat(buyPrice, this._priceTickExpLevel);
+        return floorFloat(buyPrice, this._calculatedPriceTickExpLevel);
     }
 
     private _calculateExitPrice(buyPrice: number, exitPriceFactor: number): number {
-        return floorFloat(buyPrice * exitPriceFactor, this._priceTickExpLevel);
+        return floorFloat(buyPrice * exitPriceFactor, this._calculatedPriceTickExpLevel);
     }
 
     private _calculateStopLossPrice(buyPrice: number): number|undefined {
@@ -152,7 +153,7 @@ export class SqueezeCalculator {
             return undefined;
         }
         const stopLossPrice = buyPrice * this._stopLossPriceFactor;
-        return floorFloat(stopLossPrice, this._priceTickExpLevel);
+        return floorFloat(stopLossPrice, this._calculatedPriceTickExpLevel);
     }
 
     private _buildDeal(dealContext: IDealContext, priceExit: number, timeExit: number, stopLossType?: 'price' | 'time'): ISqueezeDeal {
@@ -278,6 +279,13 @@ export class SqueezeCalculator {
         }
     }
 
+    private _recalculateTempPriceTickExpLevel(klines: IKline[], index: number): void {
+        this._calculatedPriceTickExpLevel = getKlinesPricePrecision(klines.slice(index, Math.min(klines.length, index + 30)));
+        if (this._calculatedPriceTickExpLevel < this._priceTickExpLevel) {
+            this._calculatedPriceTickExpLevel = this._priceTickExpLevel;
+        }
+    }
+
     calculate(klines: IKline[], klinesTf: string, progressBar?: IProgressListener): ISqueezeDealsStatistic[] {
         if (klines.length > 0 && klines[0].open * this._direction.multiplier < 0) {
             throw new Error(`The klines are not prepared for current direction. Please call invertKlines function before calculation`);
@@ -286,7 +294,13 @@ export class SqueezeCalculator {
         const klineBuilder = new KlineBuilder(this._params.timeFrame, klinesTf);
 
         let nextBuyPrice: number = undefined;
+        
         for (let i = 0; i < klines.length; i++) {
+            if ((klines[i].openTime - klines[0].openTime) % DAY_MS === 0) {
+                // recalculate once a day
+                this._recalculateTempPriceTickExpLevel(klines, i);
+            }
+
             progressBar?.onProgressUpdated(i, klines.length - 1)
             const kline = klines[i];
             const squeezeTfKline = klineBuilder.applyNewKline(klines[i]);

@@ -74,16 +74,15 @@ async function calculateOne(exchangeName: Exchange, symbol: string, from: number
 
 
 // Example how to get the statistic for special config
-calculateOne(Exchange.BINANCE_FUTURES, 'MORPHOUSDT', 1732662000000, 1733007600000, {
+calculateOne(Exchange.BINANCE_FUTURES, 'MYXUSDT', 1750629600000, 1754172000000, {
     isShort: false,
-    percentEnter: 4.5,
+    percentEnter: 5.0,
     percentExit: {
-        from: 1.7,
-        to: 1.9
+        from: 1.0,
+        to: 1.0
     },
-    binding: SqueezeBindings.CLOSE,
-    stopLossTime: 255 * 60 * 1000,
-    timeFrame: '1h',
+    binding: SqueezeBindings.LOW,
+    timeFrame: '1m',
     oncePerCandle: false
 });
 
