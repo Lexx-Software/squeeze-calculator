@@ -119,8 +119,15 @@
                 <el-checkbox v-model="calcForm.binding[SqueezeBindings.HIGH]" :label="$t('main.high')" />
                 <el-checkbox v-model="calcForm.binding[SqueezeBindings.OPEN]" :label="$t('main.open')" />
                 <el-checkbox v-model="calcForm.binding[SqueezeBindings.CLOSE]" :label="$t('main.close')" />
-                <el-checkbox v-model="calcForm.binding[SqueezeBindings.MID_HL]" :label="$t('main.midHL')" />
-                <el-checkbox v-model="calcForm.binding[SqueezeBindings.MID_OC]" :label="$t('main.midOC')" />
+              </el-form-item>
+            </div>
+
+            <div class="block">
+              <el-form-item label=" ">
+                <el-checkbox v-model="calcForm.binding[SqueezeBindings.HL2]" :label="$t('main.hl2')" />
+                <el-checkbox v-model="calcForm.binding[SqueezeBindings.OC2]" :label="$t('main.oc2')" />
+                <el-checkbox v-model="calcForm.binding[SqueezeBindings.OHLC4]" :label="$t('main.ohlc4')" />
+                <el-checkbox v-model="calcForm.binding[SqueezeBindings.HLC3]" :label="$t('main.hlc3')" />
               </el-form-item>
             </div>
 
@@ -552,8 +559,10 @@ export default class SqCalcForm extends mixins(BrowserLinks, TableData) {
       [SqueezeBindings.HIGH]: false,
       [SqueezeBindings.OPEN]: false,
       [SqueezeBindings.CLOSE]: false,
-      [SqueezeBindings.MID_HL]: false,
-      [SqueezeBindings.MID_OC]: false,
+      [SqueezeBindings.HL2]: false,
+      [SqueezeBindings.OC2]: false,
+      [SqueezeBindings.OHLC4]: false,
+      [SqueezeBindings.HLC3]: false,
     },
     percentEnterFrom: 1,
     percentEnterTo: 6,

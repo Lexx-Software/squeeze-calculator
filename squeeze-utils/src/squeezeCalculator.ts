@@ -9,8 +9,10 @@ export enum SqueezeBindings {
     HIGH = 'high',
     OPEN = 'open',
     CLOSE = 'close',
-    MID_HL = 'mid_hl',
-    MID_OC = 'mid_oc'
+    HL2 = 'hl2',
+    OC2 = 'oc2',
+    OHLC4 = 'ohlc4',
+    HLC3 = 'hlc3'
 }
 
 export interface ISqueezeDeal {
@@ -130,10 +132,14 @@ export class SqueezeCalculator {
     }
 
     private _getKlineBindingPrice(binding: SqueezeBindings, kline: IKline): number {
-        if (binding === 'mid_hl') {
+        if (binding === SqueezeBindings.HL2) {
             return (kline.high + kline.low) / 2;
-        } else if (binding === 'mid_oc') {
+        } else if (binding === SqueezeBindings.OC2) {
             return (kline.open + kline.close) / 2;
+        } else if (binding === SqueezeBindings.OHLC4) {
+            return (kline.open + kline.high + kline.low + kline.close) / 4;
+        } else if (binding === SqueezeBindings.HLC3) {
+            return (kline.high + kline.low + kline.close) / 3;
         }
         return kline[binding];
     }

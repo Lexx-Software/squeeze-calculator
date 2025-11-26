@@ -60,8 +60,10 @@ export default class BrowserLinks extends Vue {
             case SqueezeBindings.HIGH: return 'h';
             case SqueezeBindings.OPEN: return 'o';
             case SqueezeBindings.CLOSE: return 'c';
-            case SqueezeBindings.MID_HL: return 'hl';
-            case SqueezeBindings.MID_OC: return 'oc';
+            case SqueezeBindings.HL2: return 'hl2';
+            case SqueezeBindings.OC2: return 'oc2';
+            case SqueezeBindings.OHLC4: return 'ohlc';
+            case SqueezeBindings.HLC3: return 'hlc';
             default: return undefined;
         }
     }

@@ -55,8 +55,10 @@ export default class TableData extends Vue {
             case SqueezeBindings.HIGH: return t('main.high');
             case SqueezeBindings.OPEN: return t('main.open');
             case SqueezeBindings.CLOSE: return t('main.close');
-            case SqueezeBindings.MID_HL: return t('main.midHL');
-            case SqueezeBindings.MID_OC: return t('main.midOC');
+            case SqueezeBindings.HL2: return t('main.hl2');
+            case SqueezeBindings.OC2: return t('main.oc2');
+            case SqueezeBindings.OHLC4: return t('main.ohlc4');
+            case SqueezeBindings.HLC3: return t('main.hlc3');
             default: return '';
         }
     }
